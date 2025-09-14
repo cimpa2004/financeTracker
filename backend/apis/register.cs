@@ -1,6 +1,4 @@
-using System;
 using System.Security.Cryptography;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
 
@@ -12,7 +10,6 @@ public static class RegisterApi
 
     public static void MapRegister(this WebApplication app)
     {
-        // Use the generated FinancetrackerContext so DI can resolve the DbContext
         app.MapPost("/api/register", async (RegisterRequest req, FinancetrackerContext db) =>
         {
             if (string.IsNullOrWhiteSpace(req.Username) ||
@@ -23,7 +20,7 @@ public static class RegisterApi
             if (req.Password.Length < 8)
                 return Results.BadRequest(new { error = "Password must be at least 8 characters long." });
 
-            var users = db.Users; // use the concrete DbSet from FinancetrackerContext
+            var users = db.Users;
 
             if (await users.AnyAsync(u => u.Username == req.Username))
                 return Results.Conflict(new { error = "Username already taken." });
@@ -41,7 +38,6 @@ public static class RegisterApi
 
             var user = new User
             {
-                // leave UserId unset so DB/EF generates it per your model configuration
                 Username = req.Username,
                 Email = req.Email,
                 Salt = Convert.ToBase64String(salt),
