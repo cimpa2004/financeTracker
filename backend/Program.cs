@@ -1,5 +1,6 @@
 using backend.apis;
 using backend.Models;
+using backend.services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,9 @@ builder.Services.AddDbContext<FinancetrackerContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ??
                          "Server=(localdb)\\MSSQLLocalDB;Database=financetracker;Trusted_Connection=True;MultipleActiveResultSets=true;"));
 #endregion
+
+// register JwtService
+builder.Services.AddSingleton<JwtService>();
 
 // allow CORS for frontend 
 builder.Services.AddCors(options =>
@@ -37,5 +41,6 @@ app.UseCors("AllowFrontend");
 
 app.MapGet("/", () => "OK");
 app.MapRegister();
+app.MapLogin();
 
 app.Run();
