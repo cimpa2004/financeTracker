@@ -1,5 +1,17 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// allow requests from your Vite dev server
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") 
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 // Minimal services: keep Swagger for API exploration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -11,6 +23,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// enable CORS policy
+app.UseCors("AllowFrontend");
 
 // Simple health/root endpoint (optional)
 app.MapGet("/", () => "OK");
