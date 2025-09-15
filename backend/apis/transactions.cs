@@ -6,6 +6,11 @@ namespace backend.apis;
 
 public static class TransactionsApi
 {
+    private static readonly string UnauthorizedMessage = "Unauthorized";
+    private static readonly string TransactionNotFoundMessage = "Transaction not found.";
+    private static readonly string CategoryNotFoundMessage = "Category not found.";
+    private static readonly string AmountZeroMessage = "Amount must be non-zero.";
+    private static readonly string CategoryIdRequiredMessage = "CategoryId is required.";
     public record AddTransactionRequest(Guid CategoryId, decimal Amount, string? Description, DateTime? Date);
 
     public static void MapTransactions(this WebApplication app)
@@ -15,13 +20,13 @@ public static class TransactionsApi
 
             // get user id from JWT claims
             if (!http.TryGetUserId(out var userId))
-                return Results.Json(new { error = "Unauthorized" }, statusCode: 401);
+                return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
 
             if (req.CategoryId == Guid.Empty)
-                return Results.BadRequest(new { error = "CategoryId is required." });
+                return Results.BadRequest(new { error = CategoryIdRequiredMessage });
 
             if (req.Amount == 0)
-                return Results.BadRequest(new { error = "Amount must be non-zero." });
+                return Results.BadRequest(new { error = AmountZeroMessage });
 
             // ensure category exists and belongs to the user or is public (UserId == null)
             var categoryExists = await db.Categories
@@ -29,7 +34,7 @@ public static class TransactionsApi
                                (c.UserId == userId || c.UserId == null));
 
             if (!categoryExists)
-                return Results.BadRequest(new { error = "Category not found." });
+                return Results.BadRequest(new { error = CategoryNotFoundMessage });
 
             var transaction = new Transaction
             {
@@ -64,7 +69,7 @@ public static class TransactionsApi
         app.MapGet("/api/transactions", async (FinancetrackerContext db, HttpContext http) =>
         {
             if (!http.TryGetUserId(out var userId))
-                return Results.Json(new { error = "Unauthorized" }, statusCode: 401);
+                return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
 
             var transactions = await db.Transactions
                 .Where(t => t.UserId == userId)
@@ -88,7 +93,7 @@ public static class TransactionsApi
         app.MapGet("/api/transactions/{id}", async (Guid id, FinancetrackerContext db, HttpContext http) =>
         {
             if (!http.TryGetUserId(out var userId))
-                return Results.Json(new { error = "Unauthorized" }, statusCode: 401);
+                return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
 
             var transaction = await db.Transactions
                 .Where(t => t.TransactionId == id && t.UserId == userId)
@@ -105,7 +110,7 @@ public static class TransactionsApi
                 .FirstOrDefaultAsync();
 
             if (transaction == null)
-                return Results.NotFound(new { error = "Transaction not found." });
+                return Results.NotFound(new { error = TransactionNotFoundMessage });
 
             return Results.Ok(transaction);
         })
@@ -115,13 +120,13 @@ public static class TransactionsApi
         app.MapDelete("/api/transactions/{id}", async (Guid id, FinancetrackerContext db, HttpContext http) =>
         {
             if (!http.TryGetUserId(out var userId))
-                return Results.Json(new { error = "Unauthorized" }, statusCode: 401);
+                return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
 
             var transaction = await db.Transactions
                 .FirstOrDefaultAsync(t => t.TransactionId == id && t.UserId == userId);
 
             if (transaction == null)
-                return Results.NotFound(new { error = "Transaction not found." });
+                return Results.NotFound(new { error = TransactionNotFoundMessage });
 
             db.Transactions.Remove(transaction);
             await db.SaveChangesAsync();
@@ -134,19 +139,19 @@ public static class TransactionsApi
         app.MapPut("/api/transactions/{id}", async (Guid id, AddTransactionRequest req, FinancetrackerContext db, HttpContext http) =>
         {
             if (!http.TryGetUserId(out var userId))
-                return Results.Json(new { error = "Unauthorized" }, statusCode: 401);
+                return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
 
             if (req.CategoryId == Guid.Empty)
-                return Results.BadRequest(new { error = "CategoryId is required." });
+                return Results.BadRequest(new { error = CategoryIdRequiredMessage });
 
             if (req.Amount == 0)
-                return Results.BadRequest(new { error = "Amount must be non-zero." });
+                return Results.BadRequest(new { error = AmountZeroMessage });
 
             var transaction = await db.Transactions
                 .FirstOrDefaultAsync(t => t.TransactionId == id && t.UserId == userId);
 
             if (transaction == null)
-                return Results.NotFound(new { error = "Transaction not found." });
+                return Results.NotFound(new { error = TransactionNotFoundMessage });
 
             // ensure category exists and belongs to the user or is public (UserId == null)
             var categoryExists = await db.Categories
@@ -154,7 +159,7 @@ public static class TransactionsApi
                                (c.UserId == userId || c.UserId == null));
 
             if (!categoryExists)
-                return Results.BadRequest(new { error = "Category not found." });
+                return Results.BadRequest(new { error = CategoryNotFoundMessage });
 
             transaction.CategoryId = req.CategoryId;
             transaction.Amount = req.Amount;
