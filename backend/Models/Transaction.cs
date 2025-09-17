@@ -19,6 +19,8 @@ public partial class Transaction
 
     public DateTime? CreatedAt { get; set; }
 
+    public string? Name { get; set; } 
+
     public virtual Category Category { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;

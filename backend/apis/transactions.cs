@@ -11,7 +11,10 @@ public static class TransactionsApi
     private static readonly string CategoryNotFoundMessage = "Category not found.";
     private static readonly string AmountZeroMessage = "Amount must be non-zero.";
     private static readonly string CategoryIdRequiredMessage = "CategoryId is required.";
-    public record AddTransactionRequest(Guid CategoryId, decimal Amount, string? Description, DateTime? Date);
+    private static readonly string NameTooLongMessage = "Name cannot exceed 255 characters.";
+    private static readonly string DescriptionTooLongMessage = "Description cannot exceed 1000 characters.";
+    private static readonly string MissingName = "There must be a name.";
+    public record AddTransactionRequest(Guid CategoryId, decimal Amount, string? Description, DateTime? Date, string? Name);
 
     public static void MapTransactions(this WebApplication app)
     {
@@ -28,6 +31,15 @@ public static class TransactionsApi
             if (req.Amount == 0)
                 return Results.BadRequest(new { error = AmountZeroMessage });
 
+            if (string.IsNullOrWhiteSpace(req.Name))
+                return Results.BadRequest(new { error = MissingName });
+
+            if (req.Name != null && req.Name.Length > 255)
+                return Results.BadRequest(new { error = NameTooLongMessage });
+
+            if (!string.IsNullOrWhiteSpace(req.Description) && req.Description.Length > 1000)
+                return Results.BadRequest(new { error = DescriptionTooLongMessage });
+
             // ensure category exists and belongs to the user or is public (UserId == null)
             var categoryExists = await db.Categories
                 .AnyAsync(c => c.CategoryId == req.CategoryId &&
@@ -43,6 +55,7 @@ public static class TransactionsApi
                 CategoryId = req.CategoryId,
                 Amount = req.Amount,
                 Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim(),
+                Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim(),
                 Date = req.Date ?? DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow
             };
@@ -57,6 +70,7 @@ public static class TransactionsApi
                 transaction.CategoryId,
                 transaction.Amount,
                 transaction.Description,
+                transaction.Name,  
                 transaction.Date,
                 transaction.CreatedAt
             };
@@ -80,6 +94,7 @@ public static class TransactionsApi
                     t.CategoryId,
                     t.Amount,
                     t.Description,
+                    t.Name,        
                     t.Date,
                     t.CreatedAt
                 })
@@ -104,6 +119,7 @@ public static class TransactionsApi
                     t.CategoryId,
                     t.Amount,
                     t.Description,
+                    t.Name,         
                     t.Date,
                     t.CreatedAt
                 })
@@ -147,6 +163,15 @@ public static class TransactionsApi
             if (req.Amount == 0)
                 return Results.BadRequest(new { error = AmountZeroMessage });
 
+            if (string.IsNullOrWhiteSpace(req.Name))
+                return Results.BadRequest(new { error = MissingName });
+
+            if (req.Name != null && req.Name.Length > 255)
+                return Results.BadRequest(new { error = NameTooLongMessage });
+
+            if (!string.IsNullOrWhiteSpace(req.Description) && req.Description.Length > 1000)
+                return Results.BadRequest(new { error = DescriptionTooLongMessage });
+
             var transaction = await db.Transactions
                 .FirstOrDefaultAsync(t => t.TransactionId == id && t.UserId == userId);
 
@@ -164,6 +189,7 @@ public static class TransactionsApi
             transaction.CategoryId = req.CategoryId;
             transaction.Amount = req.Amount;
             transaction.Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim();
+            transaction.Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim();
             transaction.Date = req.Date ?? transaction.Date;
 
             await db.SaveChangesAsync();
@@ -175,6 +201,7 @@ public static class TransactionsApi
                 transaction.CategoryId,
                 transaction.Amount,
                 transaction.Description,
+                transaction.Name,
                 transaction.Date,
                 transaction.CreatedAt
             };
