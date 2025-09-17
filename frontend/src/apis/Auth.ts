@@ -1,0 +1,17 @@
+import { httpService } from "../services/httpService";
+import { type LoginData, LoginResponse, type RegisterData } from "../types/Auth";
+import { UserSchema } from "../types/User";
+import { saveLoginData } from "../utils/Auth";
+
+export async function login(loginData: LoginData) {
+    const response = await httpService.post('login', LoginResponse, loginData);
+    if (response) {
+        saveLoginData(response);
+    }
+    return response;
+}
+
+export async function registerAccount(registerData: RegisterData) {
+    const response = await httpService.post('register', UserSchema, registerData);
+    return response;
+}

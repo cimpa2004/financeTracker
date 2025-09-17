@@ -4,12 +4,23 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HealthCheck from './apis/HealthCheck';
 import { ROUTES } from './constants';
 import { ToastProvider } from './providers/ToastProvider';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 const router = createBrowserRouter([
   {
     path: ROUTES.TEST,
     element: <HealthCheck />,
   },
+  {
+    index: true,
+    path: ROUTES.LOGIN,
+    element: <Login />,
+  },
+  {
+    path: ROUTES.REGISTER,
+    element: <Register />,
+  }
 ]);
 
 const ReactQueryDevtools = lazy(() =>

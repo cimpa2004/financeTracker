@@ -69,7 +69,7 @@ class HttpService {
   private defaultHeaders: Record<string, string>;
 
   constructor(
-    baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5218',
+    baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5218/api/',
     defaultHeaders: Record<string, string> = {}
   ) {
     this.baseUrl = baseUrl;

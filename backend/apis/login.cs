@@ -8,7 +8,7 @@ namespace backend.apis;
 
 public static class LoginApi
 {
-    public record LoginRequest(string UsernameOrEmail, string Password);
+    public record LoginRequest(string email, string Password);
 
     private const int Pbkdf2Iterations = 100_000;
 
@@ -16,14 +16,14 @@ public static class LoginApi
     {
         app.MapPost("/api/login", async (LoginRequest req, FinancetrackerContext db, JwtService jwt) =>
         {
-            if (string.IsNullOrWhiteSpace(req.UsernameOrEmail) ||
+            if (string.IsNullOrWhiteSpace(req.email) ||
                 string.IsNullOrWhiteSpace(req.Password))
             {
                 return Results.BadRequest(new { error = "Username/email and password are required." });
             }
 
             var user = await db.Users
-                .FirstOrDefaultAsync(u => u.Username == req.UsernameOrEmail || u.Email == req.UsernameOrEmail);
+                .FirstOrDefaultAsync(u => u.Username == req.email || u.Email == req.email);
 
             if (user == null)
                 return UnauthorizedJson("Invalid username or password.");
