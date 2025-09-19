@@ -70,6 +70,8 @@ app.UseAuthorization();
 app.MapGet("/", () => "OK");
 app.MapRegister();
 app.MapLogin();
+app.MapLogout();
 app.MapTransactions();
+app.MapNewToken();
 
 app.Run();

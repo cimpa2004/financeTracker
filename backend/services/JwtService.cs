@@ -37,13 +37,13 @@ public class JwtService
         var accessClaims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.Username ?? ""),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
+            new Claim(JwtRegisteredClaimNames.UniqueName, user.Username ?? string.Empty),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         var accessExp = now.AddMinutes(_accessTokenMinutes);
-        var accessToken = new JwtSecurityToken(
+        var accessJwt = new JwtSecurityToken(
             issuer: _issuer,
             audience: _audience,
             claims: accessClaims,
@@ -51,18 +51,18 @@ public class JwtService
             expires: accessExp,
             signingCredentials: creds
         );
-        var accessTokenStr = new JwtSecurityTokenHandler().WriteToken(accessToken);
+        var accessToken = new JwtSecurityTokenHandler().WriteToken(accessJwt);
 
-        // refresh token
+        // refresh token (include typ=refresh)
         var refreshClaims = new List<Claim>
         {
-            new Claim("typ", "refresh"),
             new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("typ", "refresh")
         };
 
         var refreshExp = now.AddMinutes(_refreshTokenMinutes);
-        var refreshToken = new JwtSecurityToken(
+        var refreshJwt = new JwtSecurityToken(
             issuer: _issuer,
             audience: _audience,
             claims: refreshClaims,
@@ -70,8 +70,8 @@ public class JwtService
             expires: refreshExp,
             signingCredentials: creds
         );
-        var refreshTokenStr = new JwtSecurityTokenHandler().WriteToken(refreshToken);
+        var refreshToken = new JwtSecurityTokenHandler().WriteToken(refreshJwt);
 
-        return new TokenResult(accessTokenStr, accessExp, refreshTokenStr, refreshExp);
+        return new TokenResult(accessToken, accessExp, refreshToken, refreshExp);
     }
 }
