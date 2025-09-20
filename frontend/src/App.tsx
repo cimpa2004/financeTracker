@@ -7,6 +7,9 @@ import { ToastProvider } from './providers/ToastProvider';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { AuthProvider } from './providers/AuthProvider';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import Home from './pages/Home';
+import { AppLayout } from './layouts/AppLayout';
 
 const router = createBrowserRouter([
   {
@@ -14,14 +17,27 @@ const router = createBrowserRouter([
     element: <HealthCheck />,
   },
   {
-    index: true,
     path: ROUTES.LOGIN,
     element: <Login />,
   },
   {
     path: ROUTES.REGISTER,
     element: <Register />,
-  }
+  },
+  {
+    element: <ProtectedRoute />,
+    children: [
+        {
+            element: <AppLayout />,
+            children: [
+                {
+                    path: ROUTES.HOME,
+                    element: <Home />,
+                },
+            ],
+        },
+    ],
+  },
 ]);
 
 const ReactQueryDevtools = lazy(() =>
@@ -31,21 +47,20 @@ const ReactQueryDevtools = lazy(() =>
 );
 
 function App() {
-    const querryClient = new QueryClient();
+  const querryClient = new QueryClient();
 
   return (
     <QueryClientProvider client={querryClient}>
-        <Suspense fallback={<div>Loading Devtools...</div>}>
-          <ReactQueryDevtools initialIsOpen={false} buttonPosition='bottom-right' />
-        </Suspense>
-        <ToastProvider>
-            <AuthProvider>
-                <RouterProvider router={router} />
-            </AuthProvider>
-        </ToastProvider>
-
+      <Suspense fallback={<div>Loading Devtools...</div>}>
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition='bottom-right' />
+      </Suspense>
+      <ToastProvider>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ToastProvider>
     </QueryClientProvider>
-  )
+  );
 }
 
-export default App
+export default App;

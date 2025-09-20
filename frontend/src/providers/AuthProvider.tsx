@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { User } from '../types/User';
 
-import { AuthContext } from '../contexts/authContext';
+import { AuthContext } from '../contexts/AuthContext';
 
 import { logout as apiLogout } from '../apis/Auth';
 import { httpService } from '../services/httpService';
@@ -50,6 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRefreshToken(null);
       setUser(null);
       httpService.removeGlobalHeader('Authorization');
+
+      // clear persisted auth
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
     }
   }, []);
 
@@ -66,6 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setToken(response.accessToken);
       setRefreshToken(response.refreshToken);
+
+      // persist refreshed tokens
+      localStorage.setItem('token', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+
+      // update global header
+      httpService.setGlobalHeader('Authorization', `Bearer ${response.accessToken}`);
 
       return true;
     } catch (error) {
@@ -149,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
+
   // Immediately set Authorization header if token exists on mount
   if (typeof window !== 'undefined') {
     const storedData = getStoredAuthData();
@@ -172,6 +185,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(t);
         setRefreshToken(rt);
         setUser(u);
+
+        // persist auth so getStoredAuthData and other code see it
+        localStorage.setItem('token', t);
+        localStorage.setItem('refreshToken', rt);
+        localStorage.setItem('user', JSON.stringify(u));
 
         httpService.setGlobalHeader('Authorization', `Bearer ${t}`);
       },

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSmallScreen } from "../hooks/useSmallScreen";
 import { ROUTES } from "../constants";
 import { login } from "../apis/Auth";
+import { useAuth } from "../contexts/AuthContext";
 
 type LoginForm = {
     email: string;
@@ -13,7 +14,7 @@ type LoginForm = {
 export default function Login() {
     const isSmallScreen = useSmallScreen();
     const navigate = useNavigate();
-
+    const {isAuthenticated} = useAuth();
     const {
         register,
         handleSubmit,
@@ -23,7 +24,8 @@ export default function Login() {
     const onSubmit = async (data: LoginForm) => {
         const response = await login({ email: data.email, password: data.password });
         if (response?.user) {
-            navigate(ROUTES.REGISTER);
+            console.log(isAuthenticated);
+            navigate(ROUTES.HOME);
         }
     };
 

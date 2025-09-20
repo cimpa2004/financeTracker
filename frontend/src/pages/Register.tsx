@@ -97,7 +97,7 @@ export default function Register() {
                 helperText={errors.confirmPassword?.message}
             />
 
-            <FormControlLabel
+            <FormControlLabel sx={{ alignSelf: "flex-start" }}
                 control={
                     <Checkbox
                         {...register("acceptTerms", {
