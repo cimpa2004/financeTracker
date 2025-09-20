@@ -16,7 +16,6 @@ export async function registerAccount(registerData: RegisterData) {
     return response;
 }
 
-//Not implemented on backend yet //TODO: implement on backend
 export async function logout() {
     const response = await httpService.post('logout', logoutResponse);
     return response;

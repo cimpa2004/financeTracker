@@ -6,6 +6,7 @@ import { ROUTES } from './constants';
 import { ToastProvider } from './providers/ToastProvider';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import { AuthProvider } from './providers/AuthProvider';
 
 const router = createBrowserRouter([
   {
@@ -38,7 +39,9 @@ function App() {
           <ReactQueryDevtools initialIsOpen={false} buttonPosition='bottom-right' />
         </Suspense>
         <ToastProvider>
-            <RouterProvider router={router} />      
+            <AuthProvider>
+                <RouterProvider router={router} />
+            </AuthProvider>
         </ToastProvider>
 
     </QueryClientProvider>
