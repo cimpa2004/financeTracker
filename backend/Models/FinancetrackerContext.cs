@@ -29,6 +29,9 @@ public partial class FinancetrackerContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    // added subscriptions table
+    public virtual DbSet<Subscription> Subscriptions { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=financetracker;Trusted_Connection=True;MultipleActiveResultSets=true;");
 
@@ -178,6 +181,10 @@ public partial class FinancetrackerContext : DbContext
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
+            // new optional FK column linking a transaction to a subscription
+            entity.Property(e => e.SubscriptionId)
+                .HasColumnName("subscription_id");
+
             entity.HasOne(d => d.Category).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -186,43 +193,60 @@ public partial class FinancetrackerContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__transacti__user___31EC6D26");
+
+            entity.HasOne(d => d.Subscription).WithMany(p => p.Transactions)
+                .HasForeignKey(d => d.SubscriptionId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK__transaction__subscr__...");
         });
 
-        modelBuilder.Entity<User>(entity =>
+        // new mapping for subscription
+        modelBuilder.Entity<Subscription>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__user__B9BE370FEFF28101");
+            entity.HasKey(e => e.SubscriptionId).HasName("PK__subscription__subscription_id");
 
-            entity.ToTable("user");
+            entity.ToTable("subscription");
 
-            entity.HasIndex(e => e.Email, "UQ__user__AB6E6164796C5540").IsUnique();
-
-            entity.HasIndex(e => e.Username, "UQ__user__F3DBC57200E5048C").IsUnique();
-
-            entity.Property(e => e.UserId)
+            entity.Property(e => e.SubscriptionId)
                 .HasDefaultValueSql("(newsequentialid())")
-                .HasColumnName("user_id");
+                .HasColumnName("subscription_id");
+
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+
+            entity.Property(e => e.Amount)
+                .HasColumnType("decimal(10, 2)")
+                .HasColumnName("amount");
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+
+            entity.Property(e => e.Interval)
+                .HasMaxLength(50)
+                .HasColumnName("interval");
+
+            entity.Property(e => e.PaymentDate)
+                .HasColumnType("datetime")
+                .HasColumnName("payment_date");
+
+            entity.Property(e => e.IsActive)
+                .HasColumnName("is_active")
+                .HasDefaultValue(true);
+
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
-                .HasColumnName("created_at");
-            entity.Property(e => e.Email)
-                .HasMaxLength(255)
-                .HasColumnName("email");
-            entity.Property(e => e.ModifiedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("modified_at");
-            entity.Property(e => e.PasswordHash)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("password_hash");
-            entity.Property(e => e.Salt)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .HasColumnName("salt");
-            entity.Property(e => e.Username)
-                .HasMaxLength(255)
-                .HasColumnName("username");
+                .HasColumnName("created_at")
+                .HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Subscriptions)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK__subscription__user__...");
+
+            entity.HasOne(d => d.Category).WithMany()
+                .HasForeignKey(d => d.CategoryId)
+                .HasConstraintName("FK__subscription__category__...");
         });
 
         OnModelCreatingPartial(modelBuilder);

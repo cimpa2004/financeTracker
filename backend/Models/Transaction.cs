@@ -21,6 +21,11 @@ public partial class Transaction
 
     public string? Name { get; set; } 
 
+    // optional FK to subscription (a transaction can belong to a subscription)
+    public Guid? SubscriptionId { get; set; }
+
+    public virtual Subscription? Subscription { get; set; }
+
     public virtual Category Category { get; set; } = null!;
 
     public virtual User User { get; set; } = null!;

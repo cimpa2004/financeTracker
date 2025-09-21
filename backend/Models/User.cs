@@ -28,4 +28,5 @@ public partial class User
     public virtual ICollection<HouseholdMember> HouseholdMembers { get; set; } = new List<HouseholdMember>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+    public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 }
