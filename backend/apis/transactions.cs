@@ -14,7 +14,9 @@ public static class TransactionsApi
     private static readonly string NameTooLongMessage = "Name cannot exceed 255 characters.";
     private static readonly string DescriptionTooLongMessage = "Description cannot exceed 1000 characters.";
     private static readonly string MissingName = "There must be a name.";
-    public record AddTransactionRequest(Guid CategoryId, decimal Amount, string? Description, DateTime? Date, string? Name);
+
+    // added optional SubscriptionId
+    public record AddTransactionRequest(Guid CategoryId, decimal Amount, string? Description, DateTime? Date, string? Name, Guid? SubscriptionId);
 
     public static void MapTransactions(this WebApplication app)
     {
@@ -48,6 +50,16 @@ public static class TransactionsApi
             if (!categoryExists)
                 return Results.BadRequest(new { error = CategoryNotFoundMessage });
 
+            // if a subscription id was provided, verify it exists and belongs to this user
+            if (req.SubscriptionId.HasValue && req.SubscriptionId.Value != Guid.Empty)
+            {
+                var subExists = await db.Subscriptions
+                    .AnyAsync(s => s.SubscriptionId == req.SubscriptionId.Value && s.UserId == userId);
+
+                if (!subExists)
+                    return Results.BadRequest(new { error = "Subscription not found or does not belong to user." });
+            }
+
             var transaction = new Transaction
             {
                 TransactionId = Guid.NewGuid(),
@@ -57,7 +69,8 @@ public static class TransactionsApi
                 Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim(),
                 Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim(),
                 Date = req.Date ?? DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                SubscriptionId = req.SubscriptionId // optional
             };
 
             db.Transactions.Add(transaction);
@@ -70,9 +83,10 @@ public static class TransactionsApi
                 transaction.CategoryId,
                 transaction.Amount,
                 transaction.Description,
-                transaction.Name,  
+                transaction.Name,
                 transaction.Date,
-                transaction.CreatedAt
+                transaction.CreatedAt,
+                transaction.SubscriptionId
             };
 
             return Results.Created($"/api/transactions/{transaction.TransactionId}", response);
@@ -87,6 +101,7 @@ public static class TransactionsApi
 
             var transactions = await db.Transactions
                 .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.Date)
                 .Select(t => new
                 {
                     t.TransactionId,
@@ -94,9 +109,10 @@ public static class TransactionsApi
                     t.CategoryId,
                     t.Amount,
                     t.Description,
-                    t.Name,        
+                    t.Name,
                     t.Date,
-                    t.CreatedAt
+                    t.CreatedAt,
+                    t.SubscriptionId
                 })
                 .ToListAsync();
 
@@ -119,9 +135,10 @@ public static class TransactionsApi
                     t.CategoryId,
                     t.Amount,
                     t.Description,
-                    t.Name,         
+                    t.Name,
                     t.Date,
-                    t.CreatedAt
+                    t.CreatedAt,
+                    t.SubscriptionId
                 })
                 .FirstOrDefaultAsync();
 
@@ -186,11 +203,22 @@ public static class TransactionsApi
             if (!categoryExists)
                 return Results.BadRequest(new { error = CategoryNotFoundMessage });
 
+            // if a subscription id was provided, verify it exists and belongs to this user
+            if (req.SubscriptionId.HasValue && req.SubscriptionId.Value != Guid.Empty)
+            {
+                var subExists = await db.Subscriptions
+                    .AnyAsync(s => s.SubscriptionId == req.SubscriptionId.Value && s.UserId == userId);
+
+                if (!subExists)
+                    return Results.BadRequest(new { error = "Subscription not found or does not belong to user." });
+            }
+
             transaction.CategoryId = req.CategoryId;
             transaction.Amount = req.Amount;
             transaction.Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim();
             transaction.Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim();
             transaction.Date = req.Date ?? transaction.Date;
+            transaction.SubscriptionId = req.SubscriptionId; // allow adding/removing link
 
             await db.SaveChangesAsync();
 
@@ -203,12 +231,84 @@ public static class TransactionsApi
                 transaction.Description,
                 transaction.Name,
                 transaction.Date,
-                transaction.CreatedAt
+                transaction.CreatedAt,
+                transaction.SubscriptionId
             };
 
             return Results.Ok(response);
         })
         .RequireAuthorization()
         .WithName("UpdateTransaction");
+
+        app.MapPut("/api/transactions/{id}/setSubscription", async (Guid id, Guid? subscriptionId, FinancetrackerContext db, HttpContext http) =>
+        {
+            if (!http.TryGetUserId(out var userId))
+                return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
+
+            var transaction = await db.Transactions
+                .FirstOrDefaultAsync(t => t.TransactionId == id && t.UserId == userId);
+
+            if (transaction == null)
+                return Results.NotFound(new { error = TransactionNotFoundMessage });
+
+            // if a subscription id was provided, verify it exists and belongs to this user
+            if (subscriptionId.HasValue && subscriptionId.Value != Guid.Empty)
+            {
+                var subExists = await db.Subscriptions
+                    .AnyAsync(s => s.SubscriptionId == subscriptionId.Value && s.UserId == userId);
+
+                if (!subExists)
+                    return Results.BadRequest(new { error = "Subscription not found or does not belong to user." });
+            }
+
+            transaction.SubscriptionId = subscriptionId; // allow adding/removing link
+
+            await db.SaveChangesAsync();
+
+            var response = new
+            {
+                transaction.TransactionId,
+                transaction.UserId,
+                transaction.CategoryId,
+                transaction.Amount,
+                transaction.Description,
+                transaction.Name,
+                transaction.Date,
+                transaction.CreatedAt,
+                transaction.SubscriptionId
+            };
+
+            return Results.Ok(response);
+        }).RequireAuthorization()
+        .WithName("SetTransactionSubscription");
+
+        app.MapGet("/api/transactions/last3", async (FinancetrackerContext db, HttpContext http) =>
+        {
+            if (!http.TryGetUserId(out var userId))
+                return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
+
+            var transactions = await db.Transactions
+                .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.Date)
+                .ThenByDescending(t => t.CreatedAt)
+                .Take(3)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.UserId,
+                    t.CategoryId,
+                    t.Amount,
+                    t.Description,
+                    t.Name,
+                    t.Date,
+                    t.CreatedAt,
+                    t.SubscriptionId
+                })
+                .ToListAsync();
+
+            return Results.Ok(transactions);
+        })
+        .RequireAuthorization()
+        .WithName("GetLast3Transactions");
     }
 }

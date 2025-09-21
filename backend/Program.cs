@@ -73,5 +73,6 @@ app.MapLogin();
 app.MapLogout();
 app.MapTransactions();
 app.MapNewToken();
+app.MapSubscriptions();
 
 app.Run();
