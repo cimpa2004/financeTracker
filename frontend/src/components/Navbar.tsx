@@ -14,7 +14,6 @@ export default function Navbar() {
                         sx={{ mr: 2 }}
                     >
                         <MenuIcon />
-                        <div>Avatar goes here</div>
                     </IconButton>
                 </Toolbar>
             </AppBar>

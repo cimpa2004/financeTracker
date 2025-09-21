@@ -14,7 +14,7 @@ type LoginForm = {
 export default function Login() {
     const isSmallScreen = useSmallScreen();
     const navigate = useNavigate();
-    const {isAuthenticated} = useAuth();
+    const { setAuthData } = useAuth();
     const {
         register,
         handleSubmit,
@@ -22,9 +22,8 @@ export default function Login() {
     } = useForm<LoginForm>({ mode: "onTouched" });
 
     const onSubmit = async (data: LoginForm) => {
-        const response = await login({ email: data.email, password: data.password });
+        const response = await login({ email: data.email, password: data.password }, setAuthData);
         if (response?.user) {
-            console.log(isAuthenticated);
             navigate(ROUTES.HOME);
         }
     };

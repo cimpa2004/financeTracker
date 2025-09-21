@@ -1,12 +1,13 @@
 import { httpService } from "../services/httpService";
 import { type LoginData, LoginResponse, logoutResponse, type RegisterData } from "../types/Auth";
-import { UserSchema } from "../types/User";
+import { UserSchema, type User } from "../types/User";
 import { saveLoginData } from "../utils/Auth";
 
-export async function login(loginData: LoginData) {
+export async function login(loginData: LoginData, setAuthData: (token: string, refreshToken: string, user: User) => void) {
     const response = await httpService.post('login', LoginResponse, loginData);
     if (response) {
         saveLoginData(response);
+        setAuthData(response.accessToken, response.refreshToken, response.user);
     }
     return response;
 }
