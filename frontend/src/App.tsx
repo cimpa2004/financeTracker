@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HealthCheck from './apis/HealthCheck';
@@ -51,9 +51,7 @@ function App() {
 
   return (
     <QueryClientProvider client={querryClient}>
-      <Suspense fallback={<div>Loading Devtools...</div>}>
         <ReactQueryDevtools initialIsOpen={false} buttonPosition='bottom-right' />
-      </Suspense>
       <ToastProvider>
         <AuthProvider>
           <RouterProvider router={router} />

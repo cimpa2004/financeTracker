@@ -1,27 +1,10 @@
 import { z } from 'zod';
+import { UserNestedSchema } from './User';
+import { SubscriptionNestedSchema } from './Subscription';
+import { CategoryNestedSchema } from './Category';
 
 const DateString = z.string().refine((s) => !isNaN(Date.parse(s)), { message: "Invalid date format" });
 
-export const CategoryNestedSchema = z.object({
-    categoryId: z.string(),
-    name: z.string().max(255),
-    icon: z.string().nullable().optional(),
-    color: z.string().nullable().optional(),
-    type: z.string().max(50),
-});
-
-export const UserNestedSchema = z.object({
-    userId: z.string(),
-    username: z.string().max(255),
-    email: z.email(),
-});
-
-export const SubscriptionNestedSchema = z.object({
-    subscriptionId: z.string().optional(),
-    name: z.string().max(255).optional(),
-    amount: z.number().optional(),
-    interval: z.string().max(50).optional(),
-}).nullable().optional();
 
 export const TransactionSchema = z.object({
     transactionId: z.string(),

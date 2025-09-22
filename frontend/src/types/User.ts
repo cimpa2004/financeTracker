@@ -7,6 +7,12 @@ export const UserSchema = z.object({
     createdAt: z.string().refine((s) => !Number.isNaN(Date.parse(s)), { message: "Invalid datetime" }),
 });
 
+export const UserNestedSchema = z.object({
+    userId: z.string(),
+    username: z.string().max(255),
+    email: z.email(),
+});
+
 export type User = z.infer<typeof UserSchema>;
 
 

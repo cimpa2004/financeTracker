@@ -1,14 +1,16 @@
 import { Box, CircularProgress } from "@mui/material";
 import SpentThisMonth from "../components/SpentThisMonth";
-import TransactionContainer from "../components/TransactionsContainer";
+import TranOrSubContainer from "../components/TransactionsContainer";
 import { useLast3Transactions } from "../apis/Transaction";
+import { useLast3Subscriptions } from "../apis/Subsription";
 
 export default function Home() {
     const { data: last3Transactions, isLoading, isError } = useLast3Transactions();
-    if (isLoading) {
+    const { data: last3Subscriptions, isLoading: isLoadingSubscriptions, isError: isErrorSubscriptions } = useLast3Subscriptions();
+    if (isLoading || isLoadingSubscriptions) {
         return <CircularProgress />;
     }
-    if (isError) {
+    if (isError || isErrorSubscriptions) {
         return <Box>Error loading transactions</Box>;
     }
     return (
@@ -25,7 +27,12 @@ export default function Home() {
             {last3Transactions?.length === 0 ? (
                 <Box>No transactions found</Box>
             ) : (
-                <TransactionContainer Transactions={last3Transactions || []} />
+                <TranOrSubContainer Transactions={last3Transactions || []} />
+            )}
+            {last3Subscriptions?.length === 0 ? (
+                <Box>No subscriptions found</Box>
+            ) : (
+                <TranOrSubContainer Subscriptions={last3Subscriptions || []} />
             )}
         </Box>
     )
