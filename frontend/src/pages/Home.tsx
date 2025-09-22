@@ -15,7 +15,7 @@ export default function Home() {
         <Box 
             textAlign="center" 
             display="flex" 
-            flexDirection="column" 
+            flexDirection="column"
             justifyContent="flex-start"
             alignItems="center"
             width="100%"
@@ -25,9 +25,7 @@ export default function Home() {
             {last3Transactions?.length === 0 ? (
                 <Box>No transactions found</Box>
             ) : (
-                <>
-                    <TransactionContainer Transactions={last3Transactions || []} />
-                </>
+                <TransactionContainer Transactions={last3Transactions || []} />
             )}
         </Box>
     )
