@@ -22,8 +22,15 @@ public static class SubscriptionsApi
                 .Select(s => new
                 {
                     s.SubscriptionId,
-                    s.UserId,
-                    s.CategoryId,
+                    User = db.Users
+                        .Where(u => u.UserId == s.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email })
+                        .FirstOrDefault(),
+                    Category = s.CategoryId == null ? null :
+                        db.Categories
+                          .Where(c => c.CategoryId == s.CategoryId)
+                          .Select(c => new { c.CategoryId, c.Name })
+                          .FirstOrDefault(),
                     s.Amount,
                     s.Name,
                     Interval = s.Interval,
@@ -52,8 +59,15 @@ public static class SubscriptionsApi
                 .Select(s => new
                 {
                     s.SubscriptionId,
-                    s.UserId,
-                    s.CategoryId,
+                    User = db.Users
+                        .Where(u => u.UserId == s.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email })
+                        .FirstOrDefault(),
+                    Category = s.CategoryId == null ? null :
+                        db.Categories
+                          .Where(c => c.CategoryId == s.CategoryId)
+                          .Select(c => new { c.CategoryId, c.Name })
+                          .FirstOrDefault(),
                     s.Amount,
                     s.Name,
                     s.Interval,
