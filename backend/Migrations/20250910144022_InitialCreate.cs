@@ -47,12 +47,27 @@ namespace backend.Migrations
                 columns: table => new
                 {
                     category_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                    name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    icon = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    color = table.Column<string>(type: "nvarchar(7)", maxLength: 7, nullable: true),
+                    user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__category__category_id", x => x.category_id);
+                    table.ForeignKey(
+                        name: "FK_category_user_user_id",
+                        column: x => x.user_id,
+                        principalTable: "user",
+                        principalColumn: "user_id",
+                        onDelete: ReferentialAction.SetNull);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_category_user_id",
+                table: "category",
+                column: "user_id");
 
             // household table
             migrationBuilder.CreateTable(

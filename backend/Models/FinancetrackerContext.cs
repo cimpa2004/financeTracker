@@ -85,7 +85,8 @@ public partial class FinancetrackerContext : DbContext
             entity.Property(e => e.Type)
                 .HasMaxLength(50)
                 .HasColumnName("type");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.UserId)
+                .HasColumnName("user_id"); // changed back to match DB
 
             entity.HasOne(d => d.User).WithMany(p => p.Categories)
                 .HasForeignKey(d => d.UserId)
@@ -109,7 +110,7 @@ public partial class FinancetrackerContext : DbContext
             entity.Property(e => e.Platform)
                 .HasMaxLength(50)
                 .HasColumnName("platform");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id"); // changed back to match DB
 
             entity.HasOne(d => d.User).WithMany(p => p.ExternalAccounts)
                 .HasForeignKey(d => d.UserId)
@@ -139,7 +140,7 @@ public partial class FinancetrackerContext : DbContext
             entity.ToTable("household_member");
 
             entity.Property(e => e.HouseholdId).HasColumnName("household_id");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id"); // changed back to match DB
             entity.Property(e => e.IsAdmin)
                 .HasDefaultValue(false)
                 .HasColumnName("is_admin");
@@ -179,11 +180,9 @@ public partial class FinancetrackerContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("name");
 
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            // new optional FK column linking a transaction to a subscription
+            entity.Property(e => e.UserId).HasColumnName("user_id"); // changed back to match DB
             entity.Property(e => e.SubscriptionId)
-                .HasColumnName("subscription_id");
+                .HasColumnName("subscription_id"); // keep if DB has snake_case
 
             entity.HasOne(d => d.Category).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.CategoryId)
@@ -211,9 +210,9 @@ public partial class FinancetrackerContext : DbContext
                 .HasDefaultValueSql("(newsequentialid())")
                 .HasColumnName("subscription_id");
 
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.UserId).HasColumnName("user_id"); // changed back to match DB
 
-            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+            entity.Property(e => e.CategoryId).HasColumnName("category_id"); // keep or change to match DB
 
             entity.Property(e => e.Amount)
                 .HasColumnType("decimal(10, 2)")

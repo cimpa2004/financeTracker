@@ -11,7 +11,7 @@ namespace backend.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // ensure any FK that references the user PK is removed first
+            // drop known FKs that reference user (including category->user)
             migrationBuilder.Sql(@"
 -- drop known FKs that reference user
 IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK__transacti__user___31EC6D26')
@@ -25,6 +25,10 @@ IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_household_member_user
 
 IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_budget_user')
     ALTER TABLE [budget] DROP CONSTRAINT [FK_budget_user];
+
+-- drop category->user FK if present (this was missing and caused the failure)
+IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_category_user_user_id')
+    ALTER TABLE [category] DROP CONSTRAINT [FK_category_user_user_id];
 
 -- drop any subscription->user FK (name may vary) safely using dynamic sql
 DECLARE @fk sysname;
