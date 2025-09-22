@@ -76,20 +76,34 @@ public static class TransactionsApi
             db.Transactions.Add(transaction);
             await db.SaveChangesAsync();
 
-            var response = new
-            {
-                transaction.TransactionId,
-                transaction.UserId,
-                transaction.CategoryId,
-                transaction.Amount,
-                transaction.Description,
-                transaction.Name,
-                transaction.Date,
-                transaction.CreatedAt,
-                transaction.SubscriptionId
-            };
+            // return nested objects instead of FK ids
+            var created = await db.Transactions
+                .Where(t => t.TransactionId == transaction.TransactionId)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    Amount = t.Amount,
+                    Description = t.Description,
+                    Name = t.Name,
+                    Date = t.Date,
+                    CreatedAt = t.CreatedAt,
+                    Category = db.Categories
+                        .Where(c => c.CategoryId == t.CategoryId)
+                        .Select(c => new { c.CategoryId, c.Name })
+                        .FirstOrDefault(),
+                    User = db.Users
+                        .Where(u => u.UserId == t.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email })
+                        .FirstOrDefault(),
+                    Subscription = t.SubscriptionId == null ? null :
+                        db.Subscriptions
+                          .Where(s => s.SubscriptionId == t.SubscriptionId)
+                          .Select(s => new { s.SubscriptionId, s.Name, s.Amount, s.Interval, s.PaymentDate, s.IsActive })
+                          .FirstOrDefault()
+                })
+                .FirstOrDefaultAsync();
 
-            return Results.Created($"/api/transactions/{transaction.TransactionId}", response);
+            return Results.Created($"/api/transactions/{transaction.TransactionId}", created);
         })
         .RequireAuthorization()
         .WithName("AddTransaction");
@@ -105,14 +119,24 @@ public static class TransactionsApi
                 .Select(t => new
                 {
                     t.TransactionId,
-                    t.UserId,
-                    t.CategoryId,
-                    t.Amount,
-                    t.Description,
-                    t.Name,
-                    t.Date,
-                    t.CreatedAt,
-                    t.SubscriptionId
+                    Amount = t.Amount,
+                    Description = t.Description,
+                    Name = t.Name,
+                    Date = t.Date,
+                    CreatedAt = t.CreatedAt,
+                    Category = db.Categories
+                        .Where(c => c.CategoryId == t.CategoryId)
+                        .Select(c => new { c.CategoryId, c.Name })
+                        .FirstOrDefault(),
+                    User = db.Users
+                        .Where(u => u.UserId == t.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email })
+                        .FirstOrDefault(),
+                    Subscription = t.SubscriptionId == null ? null :
+                        db.Subscriptions
+                          .Where(s => s.SubscriptionId == t.SubscriptionId)
+                          .Select(s => new { s.SubscriptionId, s.Name, s.Amount, s.Interval, s.PaymentDate, s.IsActive })
+                          .FirstOrDefault()
                 })
                 .ToListAsync();
 
@@ -131,14 +155,24 @@ public static class TransactionsApi
                 .Select(t => new
                 {
                     t.TransactionId,
-                    t.UserId,
-                    t.CategoryId,
-                    t.Amount,
-                    t.Description,
-                    t.Name,
-                    t.Date,
-                    t.CreatedAt,
-                    t.SubscriptionId
+                    Amount = t.Amount,
+                    Description = t.Description,
+                    Name = t.Name,
+                    Date = t.Date,
+                    CreatedAt = t.CreatedAt,
+                    Category = db.Categories
+                        .Where(c => c.CategoryId == t.CategoryId)
+                        .Select(c => new { c.CategoryId, c.Name })
+                        .FirstOrDefault(),
+                    User = db.Users
+                        .Where(u => u.UserId == t.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email })
+                        .FirstOrDefault(),
+                    Subscription = t.SubscriptionId == null ? null :
+                        db.Subscriptions
+                          .Where(s => s.SubscriptionId == t.SubscriptionId)
+                          .Select(s => new { s.SubscriptionId, s.Name, s.Amount, s.Interval, s.PaymentDate, s.IsActive })
+                          .FirstOrDefault()
                 })
                 .FirstOrDefaultAsync();
 
@@ -225,14 +259,18 @@ public static class TransactionsApi
             var response = new
             {
                 transaction.TransactionId,
-                transaction.UserId,
-                transaction.CategoryId,
-                transaction.Amount,
-                transaction.Description,
-                transaction.Name,
-                transaction.Date,
-                transaction.CreatedAt,
-                transaction.SubscriptionId
+                Amount = transaction.Amount,
+                Description = transaction.Description,
+                Name = transaction.Name,
+                Date = transaction.Date,
+                CreatedAt = transaction.CreatedAt,
+                Category = await db.Categories.Where(c => c.CategoryId == transaction.CategoryId)
+                        .Select(c => new { c.CategoryId, c.Name }).FirstOrDefaultAsync(),
+                User = await db.Users.Where(u => u.UserId == transaction.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email }).FirstOrDefaultAsync(),
+                Subscription = transaction.SubscriptionId == null ? null :
+                        await db.Subscriptions.Where(s => s.SubscriptionId == transaction.SubscriptionId)
+                            .Select(s => new { s.SubscriptionId, s.Name, s.Amount, s.Interval, s.PaymentDate, s.IsActive }).FirstOrDefaultAsync()
             };
 
             return Results.Ok(response);
@@ -268,14 +306,18 @@ public static class TransactionsApi
             var response = new
             {
                 transaction.TransactionId,
-                transaction.UserId,
-                transaction.CategoryId,
-                transaction.Amount,
-                transaction.Description,
-                transaction.Name,
-                transaction.Date,
-                transaction.CreatedAt,
-                transaction.SubscriptionId
+                Amount = transaction.Amount,
+                Description = transaction.Description,
+                Name = transaction.Name,
+                Date = transaction.Date,
+                CreatedAt = transaction.CreatedAt,
+                Category = await db.Categories.Where(c => c.CategoryId == transaction.CategoryId)
+                        .Select(c => new { c.CategoryId, c.Name }).FirstOrDefaultAsync(),
+                User = await db.Users.Where(u => u.UserId == transaction.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email }).FirstOrDefaultAsync(),
+                Subscription = transaction.SubscriptionId == null ? null :
+                        await db.Subscriptions.Where(s => s.SubscriptionId == transaction.SubscriptionId)
+                            .Select(s => new { s.SubscriptionId, s.Name, s.Amount, s.Interval, s.PaymentDate, s.IsActive }).FirstOrDefaultAsync()
             };
 
             return Results.Ok(response);
@@ -295,14 +337,24 @@ public static class TransactionsApi
                 .Select(t => new
                 {
                     t.TransactionId,
-                    t.UserId,
-                    t.CategoryId,
-                    t.Amount,
-                    t.Description,
-                    t.Name,
-                    t.Date,
-                    t.CreatedAt,
-                    t.SubscriptionId
+                    Amount = t.Amount,
+                    Description = t.Description,
+                    Name = t.Name,
+                    Date = t.Date,
+                    CreatedAt = t.CreatedAt,
+                    Category = db.Categories
+                        .Where(c => c.CategoryId == t.CategoryId)
+                        .Select(c => new { c.CategoryId, c.Name })
+                        .FirstOrDefault(),
+                    User = db.Users
+                        .Where(u => u.UserId == t.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email })
+                        .FirstOrDefault(),
+                    Subscription = t.SubscriptionId == null ? null :
+                        db.Subscriptions
+                          .Where(s => s.SubscriptionId == t.SubscriptionId)
+                          .Select(s => new { s.SubscriptionId, s.Name, s.Amount, s.Interval, s.PaymentDate, s.IsActive })
+                          .FirstOrDefault()
                 })
                 .ToListAsync();
 
