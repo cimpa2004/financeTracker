@@ -29,12 +29,12 @@ public static class SubscriptionsApi
                     Category = s.CategoryId == null ? null :
                         db.Categories
                           .Where(c => c.CategoryId == s.CategoryId)
-                          .Select(c => new { c.CategoryId, c.Name })
+                          .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type })
                           .FirstOrDefault(),
                     s.Amount,
                     s.Name,
-                    Interval = s.Interval,
-                    PaymentDate = s.PaymentDate,
+                    s.Interval,
+                    s.PaymentDate,
                     s.IsActive,
                     s.CreatedAt
                 })
@@ -66,7 +66,7 @@ public static class SubscriptionsApi
                     Category = s.CategoryId == null ? null :
                         db.Categories
                           .Where(c => c.CategoryId == s.CategoryId)
-                          .Select(c => new { c.CategoryId, c.Name })
+                          .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type })
                           .FirstOrDefault(),
                     s.Amount,
                     s.Name,
