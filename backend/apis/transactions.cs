@@ -89,7 +89,7 @@ public static class TransactionsApi
                     CreatedAt = t.CreatedAt,
                     Category = db.Categories
                         .Where(c => c.CategoryId == t.CategoryId)
-                        .Select(c => new { c.CategoryId, c.Name })
+                        .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type })
                         .FirstOrDefault(),
                     User = db.Users
                         .Where(u => u.UserId == t.UserId)
@@ -126,7 +126,7 @@ public static class TransactionsApi
                     CreatedAt = t.CreatedAt,
                     Category = db.Categories
                         .Where(c => c.CategoryId == t.CategoryId)
-                        .Select(c => new { c.CategoryId, c.Name })
+                        .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type })
                         .FirstOrDefault(),
                     User = db.Users
                         .Where(u => u.UserId == t.UserId)
@@ -162,7 +162,7 @@ public static class TransactionsApi
                     CreatedAt = t.CreatedAt,
                     Category = db.Categories
                         .Where(c => c.CategoryId == t.CategoryId)
-                        .Select(c => new { c.CategoryId, c.Name })
+                        .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type })
                         .FirstOrDefault(),
                     User = db.Users
                         .Where(u => u.UserId == t.UserId)
@@ -265,7 +265,7 @@ public static class TransactionsApi
                 Date = transaction.Date,
                 CreatedAt = transaction.CreatedAt,
                 Category = await db.Categories.Where(c => c.CategoryId == transaction.CategoryId)
-                        .Select(c => new { c.CategoryId, c.Name }).FirstOrDefaultAsync(),
+                        .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type }).FirstOrDefaultAsync(),
                 User = await db.Users.Where(u => u.UserId == transaction.UserId)
                         .Select(u => new { u.UserId, u.Username, u.Email }).FirstOrDefaultAsync(),
                 Subscription = transaction.SubscriptionId == null ? null :
@@ -312,7 +312,7 @@ public static class TransactionsApi
                 Date = transaction.Date,
                 CreatedAt = transaction.CreatedAt,
                 Category = await db.Categories.Where(c => c.CategoryId == transaction.CategoryId)
-                        .Select(c => new { c.CategoryId, c.Name }).FirstOrDefaultAsync(),
+                        .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type }).FirstOrDefaultAsync(),
                 User = await db.Users.Where(u => u.UserId == transaction.UserId)
                         .Select(u => new { u.UserId, u.Username, u.Email }).FirstOrDefaultAsync(),
                 Subscription = transaction.SubscriptionId == null ? null :
@@ -344,7 +344,7 @@ public static class TransactionsApi
                     CreatedAt = t.CreatedAt,
                     Category = db.Categories
                         .Where(c => c.CategoryId == t.CategoryId)
-                        .Select(c => new { c.CategoryId, c.Name })
+                        .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type })
                         .FirstOrDefault(),
                     User = db.Users
                         .Where(u => u.UserId == t.UserId)

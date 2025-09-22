@@ -26,7 +26,6 @@ export default function Home() {
                 <Box>No transactions found</Box>
             ) : (
                 <>
-                    <SpentThisMonth />
                     <TransactionContainer Transactions={last3Transactions || []} />
                 </>
             )}

@@ -13,7 +13,7 @@ export default function TransactionContainer({ Transactions }: TransactionsConta
         setFirst3Transactions(Transactions.slice(0, 3));
     }, [Transactions]);
     return (
-         <Paper elevation={3} sx={{ padding: 2, marginBottom: 2 }}>
+         <Paper elevation={1} sx={{ padding: 1, marginBottom: 2, width: "100%" }} >
             {first3Transactions.map((transaction) => (
                 <Transaction key={transaction.transactionId} Transaction={transaction} />
             ))}
