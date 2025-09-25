@@ -10,6 +10,7 @@ import { AuthProvider } from './providers/AuthProvider';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Home from './pages/Home';
 import { AppLayout } from './layouts/AppLayout';
+import AddTransactionForm from './components/AddTransactionForm';
 
 const router = createBrowserRouter([
   {
@@ -33,7 +34,11 @@ const router = createBrowserRouter([
                 {
                     path: ROUTES.HOME,
                     element: <Home />,
-                },
+              },
+              {
+                path: ROUTES.ADD_TRANSACTION,
+                element: <AddTransactionForm />,
+              },
             ],
         },
     ],

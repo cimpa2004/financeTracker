@@ -1,6 +1,6 @@
-import { TransactionArraySchema } from "../types/Transaction";
+import { TransactionArraySchema, TransactionSchema } from "../types/Transaction";
 import {httpService} from "../services/httpService";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 async function getAllTransactions() {
     const response = await httpService.get('transactions', TransactionArraySchema);
@@ -26,3 +26,21 @@ export function useLast3Transactions() {
     })
 }
 
+async function addTransaction(payload: unknown) {
+    // validate/serialize with TransactionSchema if available in your types
+    const response = await httpService.post('transactions', payload, TransactionSchema);
+    return response;
+}
+
+export function useAddTransaction() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: addTransaction,
+        onSuccess: () => {
+            // refresh lists after a successful add
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["transactions", "last3"] });
+        },
+    });
+}

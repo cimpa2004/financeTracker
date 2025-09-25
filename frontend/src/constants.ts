@@ -3,4 +3,5 @@ export const ROUTES = {
     TEST: '/testConnection',
     LOGIN: '/login',
     REGISTER: '/register',
+    ADD_TRANSACTION: '/add-transaction',
 }

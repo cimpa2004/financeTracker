@@ -1,5 +1,5 @@
 import { enqueueSnackbar } from 'notistack';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 
 import { type CustomSnackbarOptions } from '../providers/ToastProvider.tsx';
 
