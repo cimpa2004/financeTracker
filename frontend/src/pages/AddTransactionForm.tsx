@@ -24,7 +24,7 @@ import { useCategories } from '../apis/Category';
 import { useAuth } from '../contexts/AuthContext';
 
 
-export default function AddTransactionForm() {
+export default function AddTransaction() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const today = new Date().toISOString().slice(0, 10);
