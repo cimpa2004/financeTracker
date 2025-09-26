@@ -30,10 +30,12 @@ export type TransactionArray = z.infer<typeof TransactionArraySchema>;
 
 export const TransactionFormSchema = z.object({
   categoryId: z.string({ message: "Valid category is required" }),
-  amount: z.number().refine(val => val !== 0, { message: "Amount must be non-zero" })
-    .or(z.string()
-    .refine(val => !isNaN(Number(val)) && Number(val) !== 0, { message: "Amount must be a valid non-zero number" })
-    .transform(val => Number(val))),
+  amount: z.string()
+    .regex(/^\d+(\.\d+)?$/, { message: "Amount must contain only digits and an optional '.' decimal separator" })
+    .refine(val => {
+      const n = Number(val);
+      return !Number.isNaN(n) && n !== 0;
+    }, { message: "Amount must be non-zero" }),
   description: z.string().max(1000, { message: "Description must be at most 1000 characters" }).nullable().optional(),
   name: z.string().max(255, { message: "Name must be at most 255 characters" }),
   date: z.string().transform(val => val ? val : new Date().toISOString().slice(0, 10)),
