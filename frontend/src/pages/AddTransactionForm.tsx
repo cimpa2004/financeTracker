@@ -50,7 +50,7 @@ export default function AddTransaction() {
 
   const onSubmit = (data: TransactionFormInput) => {
     addTransaction(
-      { ...data,  userId: user?.userId || '' },
+      { ...data, userId: user?.userId || '' },
       {
         onSuccess: () => {
           reset({

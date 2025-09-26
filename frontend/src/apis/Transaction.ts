@@ -1,4 +1,4 @@
-import { TransactionArraySchema, TransactionSchema } from "../types/Transaction";
+import { TransactionArraySchema, TransactionSchema, type TransactionFormInput } from "../types/Transaction";
 import {httpService} from "../services/httpService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -26,10 +26,10 @@ export function useLast3Transactions() {
     })
 }
 
-async function addTransaction(payload: unknown) {
-    // validate/serialize with TransactionSchema if available in your types
-    const response = await httpService.post('transactions', payload, TransactionSchema);
-    return response;
+async function addTransaction(payload: TransactionFormInput ) {
+  // validate/serialize with TransactionSchema if available in your types
+  const response = await httpService.post('transactions', TransactionSchema, payload);
+  return response;
 }
 
 export function useAddTransaction() {
