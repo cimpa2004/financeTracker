@@ -41,7 +41,7 @@ export default function AddTransaction() {
     resolver: zodResolver(TransactionFormSchema),
     defaultValues: {
       userId: user?.userId || '',
-      amount: 0,
+      amount: "0",
       name: '',
       date: today,
       categoryId: '',
@@ -55,7 +55,7 @@ export default function AddTransaction() {
         onSuccess: () => {
           reset({
             userId: user?.userId || '',
-            amount: 0,
+            amount: "0",
             name: '',
             date: today,
             categoryId: '',
@@ -107,14 +107,18 @@ export default function AddTransaction() {
                 <TextField
                   {...field}
                   label="Amount*"
-                  type="number"
+                  type="text"
                   fullWidth
+                  inputMode="decimal"
                   InputProps={{
                     startAdornment: <InputAdornment position="start">$</InputAdornment>,
                   }}
                   inputProps={{
-                    step: '0.01',
+                    inputMode: 'decimal',
                   }}
+                  // ensure the displayed value is string
+                  value={field.value ?? ''}
+                  onChange={(e) => field.onChange(e.target.value)}
                   error={!!errors.amount}
                   helperText={errors.amount?.message}
                 />
@@ -181,7 +185,7 @@ export default function AddTransaction() {
               variant="contained"
               color="primary"
               fullWidth={isMobile}
-              disabled={isPending}
+              disabled={isPending || isSubmitting}
             >
               {isPending ? 'Adding...' : 'Add Transaction'}
             </Button>
