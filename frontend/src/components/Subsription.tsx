@@ -27,7 +27,7 @@ export default function Subscription({ Subsription }: SubscriptionProps) {
         <Icon name={typeof Subsription?.category === 'object' ? Subsription?.category?.icon ?? undefined : undefined}
           colorOf={Subsription?.category && typeof Subsription?.category === 'object' ? Subsription?.category?.color ?? undefined : undefined}
           style={{ width: 40, height: 40, marginRight: 16 }} />
-            <Box flexGrow={1} display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+            <Box flexGrow={1} display="flex" flexDirection="row" justifyContent="space-between" alignItems="center" marginLeft={1}>
                 <Box display="flex" flexDirection="column" flexGrow={1} sx={{ overflow: "hidden" }}>
                     <Typography fontWeight="bold" noWrap>
                         {Subsription.name}

@@ -22,9 +22,9 @@ export default function Transaction({ Transaction }: TransactionProps) {
         >
         <Icon name={typeof Transaction?.category === 'object' ? Transaction?.category?.icon ?? undefined : undefined}
           colorOf={Transaction?.category && typeof Transaction?.category === 'object' ? Transaction?.category?.color ?? undefined : undefined}
-          style={{ width: 40, height: 40, marginRight: 16 }}
+          style={{ width: 40, height: 40 }}
         />
-            <Box flexGrow={1} display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
+            <Box flexGrow={1} display="flex" flexDirection="row" justifyContent="space-between" alignItems="center" marginLeft={1}>
                 <Box fontWeight="bold">{Transaction.name}</Box>
                 <Box color="text.secondary">${Transaction.amount.toFixed(2)}</Box>
             </Box>
