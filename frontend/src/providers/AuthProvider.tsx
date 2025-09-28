@@ -67,7 +67,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsRefreshing(true);
 
     try {
-      const response = await apiRefreshToken(localStorage.getItem('refreshToken') ?? '');
+      // prefer the state value (less likely to be stale), fall back to localStorage
+      const rt = refreshToken ?? localStorage.getItem('refreshToken') ?? '';
+
+      // guard: if there's no refresh token, bail and logout
+      if (!rt) {
+        console.warn('AuthProvider: no refresh token available for refresh call');
+        await handleLogout();
+        return false;
+      }
+
+      console.debug('AuthProvider: calling refresh with token length', rt.length);
+      const response = await apiRefreshToken(rt);
 
       setToken(response.accessToken);
       setRefreshToken(response.refreshToken);
@@ -87,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing, handleLogout]);
+  }, [isRefreshing, refreshToken, handleLogout]);
 
   // Safe JWT token parsing
   const parseTokenExpiry = useCallback((tokenString: string): number | null => {
