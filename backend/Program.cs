@@ -76,4 +76,6 @@ app.MapNewToken();
 app.MapSubscriptions();
 app.MapCategories();
 
+app.MapSpentThisMonth();
+
 app.Run();
