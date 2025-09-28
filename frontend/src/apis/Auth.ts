@@ -23,7 +23,7 @@ export async function logout() {
 }
 
 export async function refreshToken(refreshToken: string) {
-    const response = await httpService.post('refresh', LoginResponse, { refreshToken });
+    const response = await httpService.post('auth/refresh', LoginResponse, { refreshToken });
     if (response) {
         saveLoginData(response);
     }
