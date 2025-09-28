@@ -11,6 +11,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import Home from './pages/Home';
 import { AppLayout } from './layouts/AppLayout';
 import AddTransaction from './pages/AddTransactionForm';
+import AddCategoryPage from './pages/AddCategoryPage';
 
 const router = createBrowserRouter([
   {
@@ -31,14 +32,18 @@ const router = createBrowserRouter([
         {
             element: <AppLayout />,
             children: [
-                {
-                    path: ROUTES.HOME,
-                    element: <Home />,
+              {
+                path: ROUTES.HOME,
+                element: <Home />,
               },
               {
                 path: ROUTES.ADD_TRANSACTION,
                 element: <AddTransaction />,
               },
+              {
+                path: ROUTES.ADD_CATEGORY,
+                element: <AddCategoryPage />,
+              }
             ],
         },
     ],

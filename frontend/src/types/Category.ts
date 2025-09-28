@@ -7,3 +7,11 @@ export const CategorySchema = z.object({
     color: z.string().nullable().optional(),
     type: z.string().max(50),
 });
+
+export type AddCategoryInput = {
+  name: string;
+  icon?: string | null;
+  color?: string | null;
+  type: string;
+  isPublic?: boolean;
+};
