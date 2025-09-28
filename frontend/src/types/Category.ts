@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const CategoryNestedSchema = z.object({
+export const CategorySchema = z.object({
     categoryId: z.string(),
     name: z.string().max(255),
     icon: z.string().nullable().optional(),

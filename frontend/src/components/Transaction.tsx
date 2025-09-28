@@ -1,5 +1,6 @@
 import { Box, Paper } from "@mui/material";
 import type { Transaction as TransactionType } from "../types/Transaction";
+import { Icon } from '../Icons/Icons.tsx';
 
 export interface TransactionProps{
     Transaction: TransactionType;
@@ -19,11 +20,10 @@ export default function Transaction({ Transaction }: TransactionProps) {
                 marginBottom: 1,
             }}
         >
-            <img
-                src={typeof Transaction.category === "object" && Transaction.category?.icon ? Transaction.category.icon : ""}
-                alt=""
-                style={{ width: 40, height: 40, marginRight: 16 }}
-            />
+        <Icon name={typeof Transaction?.category === 'object' ? Transaction?.category?.icon ?? undefined : undefined}
+          colorOf={Transaction?.category && typeof Transaction?.category === 'object' ? Transaction?.category?.color ?? undefined : undefined}
+          style={{ width: 40, height: 40, marginRight: 16 }}
+        />
             <Box flexGrow={1} display="flex" flexDirection="row" justifyContent="space-between" alignItems="center">
                 <Box fontWeight="bold">{Transaction.name}</Box>
                 <Box color="text.secondary">${Transaction.amount.toFixed(2)}</Box>

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { httpService } from '../services/httpService';
 import { z } from 'zod';
-import { CategoryNestedSchema as CategorySchema } from '../types/Category';
+import { CategorySchema as CategorySchema } from '../types/Category';
 
 
 async function getCategories() {

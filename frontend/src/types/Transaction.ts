@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { UserNestedSchema } from './User';
 import { SubscriptionNestedSchema } from './Subscription';
-import { CategoryNestedSchema } from './Category';
+import { CategorySchema } from './Category';
 
 const DateString = z.string().refine((s) => !isNaN(Date.parse(s)), { message: "Invalid date format" });
 
@@ -9,7 +9,7 @@ const DateString = z.string().refine((s) => !isNaN(Date.parse(s)), { message: "I
 export const TransactionSchema = z.object({
     transactionId: z.string(),
     // accept either nested category object or categoryId string (or null)
-    category: z.union([CategoryNestedSchema, z.string()]).nullable().optional(),
+    category: z.union([CategorySchema, z.string()]).nullable().optional(),
     user: z.union([UserNestedSchema, z.string()]).nullable().optional(),
 
     amount: z.number(),
