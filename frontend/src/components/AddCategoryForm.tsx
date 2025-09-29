@@ -7,8 +7,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Checkbox,
   Stack,
   Alert,
 } from '@mui/material';
@@ -36,7 +34,14 @@ export default function AddCategoryForm() {
   });
 
   const onSubmit = (data: AddCategoryInput) => {
-    const hexedData = { ...data, color: '#' + data.color };
+    const normalizeHex = (val?: string | null) => {
+      const v = (val ?? '').trim();
+      if (!v) return '';
+      const noHashes = v.replace(/^#+/, '');
+      return '#' + noHashes;
+    };
+
+    const hexedData = { ...data, color: normalizeHex(data.color) };
     addCategory(hexedData, {
       onSuccess: () => {
         reset();
@@ -71,25 +76,29 @@ export default function AddCategoryForm() {
             name="color"
             control={control}
             render={({ field }) => (
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                <Box width={40} height={40} overflow="hidden"
-                >
-                  <ColorPicker
-                    value={field.value ?? ''}
-                    format="hex"
-                    onChange={(e) => field.onChange(e.value)}
-                    style={{ width: '100%', height: '100%', padding: 0, borderRadius: 0 }}
-                  />
-                </Box>
-
-                <TextField
-                  label="Color (hex)"
-                  value={field.value ?? ''}
-                  onChange={(e) => field.onChange(e.target.value)}
-                  error={!!errors.color}
-                  helperText={errors.color?.message}
+              <TextField
+                label="Color (hex)"
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(e.target.value)}
+                error={!!errors.color}
+                helperText={errors.color?.message}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <Stack direction="row">
+                          <ColorPicker
+                            value={field.value ?? ''}
+                            format="hex"
+                            onChange={(e) => field.onChange(e.value)}
+                            defaultColor='1976d2'
+                            inputStyle={{ border: 'none', width: 36, height: '100%', marginRight: 8 }}
+                          />
+                          #
+                        </Stack>
+                      ),
+                    },
+                  }}
                 />
-              </Box>
             )}
           />
 
@@ -106,14 +115,6 @@ export default function AddCategoryForm() {
               )}
             />
           </FormControl>
-
-          <Controller
-            name="isPublic"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel control={<Checkbox {...field} checked={field.value} />} label="Public category" />
-            )}
-          />
 
           <Box>
             <Button type="submit" variant="contained" color="primary" disabled={isPending} fullWidth>
