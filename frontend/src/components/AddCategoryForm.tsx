@@ -69,14 +69,8 @@ export default function AddCategoryForm() {
             name='icon'
             control={control}
             render={({ field }) => (
-              // <TextField
-              //   label="Icon (name)"
-              //   {...field}
-              //   error={!!errors.icon}
-              //   helperText={errors.icon?.message}
-              //   fullWidth
-              // />
               <IconSelector
+                value={field.value}
                 onSelect={field.onChange}
               />
             )}
@@ -89,6 +83,7 @@ export default function AddCategoryForm() {
               <TextField
                 label="Color (hex)"
                 value={field.value ?? ''}
+                disabled
                 onChange={(e) => field.onChange(e.target.value)}
                 error={!!errors.color}
                 helperText={errors.color?.message}
