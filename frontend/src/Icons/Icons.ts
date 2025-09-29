@@ -28,53 +28,36 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import type { SvgIconProps } from "@mui/material";
 
 export const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
-  // income
+  // income / primary lookups
   income: MonetizationOnIcon,
-  monetization: MonetizationOnIcon,
+
+  // bank / salary / savings
   salary: AccountBalanceIcon,
-  bank: AccountBalanceIcon,
   savings: SavingsIcon,
-  save: SavingsIcon,
   money: AttachMoneyIcon,
-  attachMoney: AttachMoneyIcon,
   gift: CardGiftcardIcon,
-  freelance: WorkIcon,
   work: WorkIcon,
 
   // expenses
   expense: ReceiptIcon,
-  receipt: ReceiptIcon,
   receiptLong: ReceiptLongIcon,
   creditCard: CreditCardIcon,
-  card: CreditCardIcon,
   atm: LocalAtmIcon,
-  shopping: ShoppingCartIcon,
   shoppingCart: ShoppingCartIcon,
   groceries: LocalGroceryStoreIcon,
-  grocery: LocalGroceryStoreIcon,
   restaurant: RestaurantIcon,
-  dining: RestaurantIcon,
   cafe: LocalCafeIcon,
   fuel: LocalGasStationIcon,
-  gas: LocalGasStationIcon,
   transport: DirectionsCarIcon,
-  car: DirectionsCarIcon,
   rent: HomeWorkIcon,
-  mortgage: HomeWorkIcon,
-  bill: ReceiptIcon,
-  bills: ReceiptIcon,
   shoppingOffer: LocalOfferIcon,
   travel: FlightIcon,
-  flight: FlightIcon,
   health: LocalHospitalIcon,
-  medical: LocalHospitalIcon,
   education: SchoolIcon,
-  school: SchoolIcon,
   subscription: SubscriptionsIcon,
   entertainment: MovieIcon,
-  movie: MovieIcon,
   laundry: LocalLaundryServiceIcon,
 
-  // fallback/help
+  // fallback
   unknown: HelpOutlineIcon,
 };
