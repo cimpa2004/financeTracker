@@ -13,6 +13,7 @@ import {
 import { useAddCategory } from '../apis/Category';
 import type { AddCategoryInput } from '../types/Category';
 import { ColorPicker } from 'primereact/colorpicker';
+import IconSelector from './IconSelector';
 
 export default function AddCategoryForm() {
   const { mutate: addCategory, isPending, isError, error, isSuccess } = useAddCategory();
@@ -27,7 +28,7 @@ export default function AddCategoryForm() {
     defaultValues: {
       name: '',
       icon: '',
-      color: '#1976d2',
+      color: '1976d2',
       type: 'expense',
       isPublic: false,
     },
@@ -64,12 +65,21 @@ export default function AddCategoryForm() {
             fullWidth
           />
 
-          <TextField
-            label="Icon (name)"
-            {...register('icon', { maxLength: { value: 255, message: 'Max 255 chars' } })}
-            error={!!errors.icon}
-            helperText={errors.icon?.message}
-            fullWidth
+          <Controller
+            name='icon'
+            control={control}
+            render={({ field }) => (
+              // <TextField
+              //   label="Icon (name)"
+              //   {...field}
+              //   error={!!errors.icon}
+              //   helperText={errors.icon?.message}
+              //   fullWidth
+              // />
+              <IconSelector
+                onSelect={field.onChange}
+              />
+            )}
           />
 
           <Controller
