@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HealthCheck from './apis/HealthCheck';
 import { ROUTES } from './constants';
 import { ToastProvider } from './providers/ToastProvider';
+import { AppThemeProvider } from './theme';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { AuthProvider } from './providers/AuthProvider';
@@ -66,12 +67,14 @@ function App() {
 
   return (
     <QueryClientProvider client={querryClient}>
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition='bottom-right' />
-      <ToastProvider>
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
-      </ToastProvider>
+      <ReactQueryDevtools initialIsOpen={false} buttonPosition='bottom-right' />
+      <AppThemeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
+        </ToastProvider>
+      </AppThemeProvider>
     </QueryClientProvider>
   );
 }
