@@ -14,9 +14,9 @@ export default function Home() {
         return <Box>Error loading transactions</Box>;
     }
     return (
-        <Box 
-            textAlign="center" 
-            display="flex" 
+        <Box
+            textAlign="center"
+            display="flex"
             flexDirection="column"
             justifyContent="flex-start"
             alignItems="center"

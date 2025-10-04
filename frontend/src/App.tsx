@@ -12,8 +12,13 @@ import Home from './pages/Home';
 import { AppLayout } from './layouts/AppLayout';
 import AddTransaction from './pages/AddTransactionForm';
 import AddCategoryPage from './pages/AddCategoryPage';
+import WelcomePage from './pages/WelcomePage';
 
 const router = createBrowserRouter([
+  {
+    index: true,
+    element: <WelcomePage />
+  },
   {
     path: ROUTES.TEST,
     element: <HealthCheck />,
