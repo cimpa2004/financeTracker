@@ -3,8 +3,8 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import NavItem from "./NavItem";
-import { ROUTES } from "../constants";
-import { useAuth } from "../contexts/AuthContext";
+import { ROUTES } from "../../constants";
+import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 interface NavDrawerContentProps {

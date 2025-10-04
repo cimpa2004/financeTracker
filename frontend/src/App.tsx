@@ -7,7 +7,7 @@ import { ToastProvider } from './providers/ToastProvider';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { AuthProvider } from './providers/AuthProvider';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/navigation/ProtectedRoute';
 import Home from './pages/Home';
 import { AppLayout } from './layouts/AppLayout';
 import AddTransaction from './pages/AddTransactionForm';
