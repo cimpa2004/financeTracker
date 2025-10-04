@@ -51,10 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       httpService.removeGlobalHeader('Authorization');
 
-      // clear persisted auth
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+      // clear all persisted auth and other stored data
+      localStorage.clear();
+
     }
   }, []);
 
