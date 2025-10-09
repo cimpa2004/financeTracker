@@ -20,7 +20,7 @@ export default function Subscription({ Subsription }: SubscriptionProps) {
                 alignItems: "center",
                 justifyContent: "space-between",
                 p: 2,
-                width: "90%",
+                width: "100%",
                 marginBottom: 1,
             }}
         >

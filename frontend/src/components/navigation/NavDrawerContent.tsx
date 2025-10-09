@@ -43,6 +43,7 @@ export default function NavDrawerContent({ closeDrawer }: NavDrawerContentProps)
             startIcon={user ? <LogoutIcon /> : <LoginIcon />}
             onClick={async () => {
               if (user) {
+                navigate(ROUTES.INDEX);
                 if (typeof logout === "function") await logout();
                 closeDrawer();
               } else {

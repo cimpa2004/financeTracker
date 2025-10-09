@@ -16,7 +16,7 @@ export default function Transaction({ Transaction }: TransactionProps) {
                 alignItems: "center",
                 justifyContent: "space-between",
                 p: 2,
-                width: "90%",
+                width: "100%",
                 marginBottom: 1,
             }}
         >

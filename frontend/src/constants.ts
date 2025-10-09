@@ -1,4 +1,5 @@
 export const ROUTES = {
+  INDEX: '/',
   HOME: '/home',
   TEST: '/testConnection',
   LOGIN: '/login',
