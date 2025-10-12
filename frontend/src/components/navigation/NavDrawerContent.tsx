@@ -17,12 +17,12 @@ type PageDef = {
   icon?: React.ReactNode;
 };
 
-// Pages shown in the nav drawer. Update this list to control visible pages.
 const PAGES: PageDef[] = [
   { name: 'Home', route: ROUTES.HOME, icon: <HomeIcon /> },
   { name: 'Add Transaction', route: ROUTES.ADD_TRANSACTION, icon: <AddShoppingCartIcon /> },
   { name: 'Add Category', route: ROUTES.ADD_CATEGORY, icon: <CategoryIcon /> },
-  { name: 'Budget Charts', route: ROUTES.BUDGET_CHARTS, icon: <PieChartIcon /> }
+  { name: 'Budget Charts', route: ROUTES.BUDGET_CHARTS, icon: <PieChartIcon /> },
+  { name: 'Add Budget', route: ROUTES.ADD_BUDGET, icon: <PieChartIcon /> },
 ];
 
 interface NavDrawerContentProps {

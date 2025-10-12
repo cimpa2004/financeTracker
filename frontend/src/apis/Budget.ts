@@ -23,7 +23,7 @@ export function useBudget(id: string | null) {
 async function addBudget(payload: BudgetFormInput) {
   const body = {
     CategoryId: payload.categoryId ?? null,
-    Amount: payload.amount,
+  Amount: payload.amount,
     Name: payload.name ?? null,
     StartDate: payload.startDate ?? null,
     EndDate: payload.endDate ?? null,
@@ -34,7 +34,13 @@ async function addBudget(payload: BudgetFormInput) {
 
 export function useAddBudget() {
   const queryClient = useQueryClient();
-  return useMutation({ mutationFn: addBudget, onSuccess: () => queryClient.invalidateQueries({ queryKey: ['budgets'] }) });
+  return useMutation({
+    mutationFn: addBudget,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets', 'status'] });
+    },
+  });
 }
 
 async function updateBudget(id: string, payload: BudgetFormInput) {

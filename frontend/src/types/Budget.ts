@@ -27,13 +27,11 @@ export const BudgetNestedSchema = z.object({
 
 export const BudgetFormSchema = z.object({
 	categoryId: z.string().nullable().optional(),
-	amount: z.string()
-		.regex(/^\d+(\.\d+)?$/, { message: 'Amount must be a non-negative number' })
-		.transform(val => val ? Number(val) : 0)
-		.refine(n => !Number.isNaN(n) && n >= 0, { message: 'Amount must be greater than or equal to 0' }),
+	amount: z.number().min(0, { message: 'Amount must be greater than or equal to 0' }),
 	name: z.string().max(255).nullable().optional(),
 	startDate: z.string().nullable().optional(),
 	endDate: z.string().nullable().optional(),
+	interval: z.enum(['weekly', 'monthly', 'yearly']).nullable().optional(),
 });
 
 export type Budget = z.infer<typeof BudgetSchema>;
@@ -50,6 +48,7 @@ export const BudgetStatusSchema = z.object({
 	endDate: DateString.nullable().optional(),
 	createdAt: DateString.nullable().optional(),
 	category: CategorySchema.nullable().optional(),
+	user: UserNestedSchema.nullable().optional(),
 });
 
 export const BudgetsStatusArraySchema = z.array(BudgetStatusSchema);

@@ -7,4 +7,5 @@ export const ROUTES = {
   ADD_TRANSACTION: '/add-transaction',
   ADD_CATEGORY: '/add-category',
   BUDGET_CHARTS: '/budget-charts',
+  ADD_BUDGET: '/add-budget',
 }

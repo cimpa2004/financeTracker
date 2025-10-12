@@ -1,7 +1,10 @@
-import { Box, Typography, CircularProgress, Card, CardContent } from '@mui/material';
+import { Box, Typography, CircularProgress, Card, CardContent, Fab, Dialog, DialogTitle, DialogContent, Snackbar } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { useTheme } from '@mui/material/styles';
 import { useAllBudgetsStatus } from '../apis/Budget';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import AddBudgetForm from '../components/AddBudgetForm';
+import { useState } from 'react';
 
 function SmallBar({ percent, color }: { percent: number; color: string }) {
   return (
@@ -12,6 +15,12 @@ function SmallBar({ percent, color }: { percent: number; color: string }) {
 }
 
 export default function BudgetChartsPage() {
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+  const [snackOpen, setSnackOpen] = useState(false);
+  const showSnack = () => setSnackOpen(true);
+  const hideSnack = () => setSnackOpen(false);
   const theme = useTheme();
   const { data, isLoading, isError } = useAllBudgetsStatus();
 
@@ -68,8 +77,8 @@ export default function BudgetChartsPage() {
                       </Typography>
                     </Box>
                     <Box textAlign="right">
-                      <Typography variant="subtitle1">{new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(b.spent)} / {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(b.amount)}</Typography>
-                      <Typography variant="caption">Remaining: {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(b.remaining)}</Typography>
+                      <Typography variant="subtitle1">{new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(b.spent)} / {new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(b.amount)}</Typography>
+                      <Typography variant="caption">Remaining: {new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(b.remaining)}</Typography>
                     </Box>
                   </Box>
                   <SmallBar percent={percent} color={color} />
@@ -88,6 +97,28 @@ export default function BudgetChartsPage() {
           );
         })}
       </Box>
+      <Fab color="primary" aria-label="add" onClick={handleOpen} sx={{ position: 'fixed', right: 24, bottom: 24 }}>
+        <AddIcon />
+      </Fab>
+
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+        <DialogTitle>Add Budget</DialogTitle>
+        <DialogContent>
+          <AddBudgetForm onSuccess={() => { handleClose(); showSnack(); }} />
+        </DialogContent>
+      </Dialog>
+      <Snackbar
+        open={snackOpen}
+        onClose={hideSnack}
+        autoHideDuration={5000}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      >
+        <Box sx={{ p: 0.5 }}>
+          <Box sx={{ bgcolor: theme.palette.success.main, color: theme.palette.getContrastText(theme.palette.success.main), px: 2, py: 1, borderRadius: 1, boxShadow: 3 }}>
+            Budget added
+          </Box>
+        </Box>
+      </Snackbar>
     </Box>
   );
 }

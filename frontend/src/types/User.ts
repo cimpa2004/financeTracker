@@ -9,8 +9,8 @@ export const UserSchema = z.object({
 
 export const UserNestedSchema = z.object({
     userId: z.string(),
-    username: z.string().max(255),
-    email: z.email(),
+    username: z.string().max(255).nullable().optional(),
+    email: z.string().max(255).nullable().optional(),
 });
 
 export type User = z.infer<typeof UserSchema>;

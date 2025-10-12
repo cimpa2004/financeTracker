@@ -15,6 +15,7 @@ import AddTransaction from './pages/AddTransactionForm';
 import AddCategoryPage from './pages/AddCategoryPage';
 import WelcomePage from './pages/WelcomePage';
 import BudgetChartsPage from './pages/BudgetChartsPage';
+import AddBudgetPage from './pages/AddBudgetPage';
 
 const router = createBrowserRouter([
   {
@@ -54,7 +55,11 @@ const router = createBrowserRouter([
               {
                 path: ROUTES.BUDGET_CHARTS,
                 element: <BudgetChartsPage />,
-              }
+              },
+              {
+                path: ROUTES.ADD_BUDGET,
+                element: <AddBudgetPage />,
+              },
             ],
         },
     ],
