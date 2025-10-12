@@ -28,6 +28,14 @@ public static class BudgetsApi
        .RequireAuthorization()
        .WithName("GetBudgetById");
 
+    app.MapGet("/api/budgets/{id}/status", GetBudgetStatus)
+      .RequireAuthorization()
+      .WithName("GetBudgetStatus");
+
+    app.MapGet("/api/budgets/status", GetAllBudgetsStatus)
+      .RequireAuthorization()
+      .WithName("GetAllBudgetsStatus");
+
     app.MapPut("/api/budgets/{id}", UpdateBudget)
        .RequireAuthorization()
        .WithName("UpdateBudget");
@@ -198,5 +206,81 @@ public static class BudgetsApi
     await db.SaveChangesAsync();
 
     return Results.NoContent();
+  }
+
+  private static async Task<IResult> GetBudgetStatus(Guid id, FinancetrackerContext db, HttpContext http)
+  {
+    if (!http.TryGetUserId(out var userId))
+      return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
+
+    var budget = await db.Budgets.Include(b => b.Category).FirstOrDefaultAsync(b => b.BudgetId == id && b.UserId == userId);
+
+    if (budget == null)
+      return Results.NotFound(new { error = BudgetNotFoundMessage });
+
+    var since = budget.LastReset ?? DateTime.UtcNow;
+
+    var transactions = await db.Transactions
+        .Include(t => t.Category)
+        .Where(t => t.UserId == userId && t.Date >= since && (budget.CategoryId == null || t.CategoryId == budget.CategoryId))
+        .ToListAsync();
+
+    var spent = transactions
+        .Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
+        .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
+
+    var remaining = budget.Amount - spent;
+
+    var category = budget.Category == null ? null : new { budget.Category.CategoryId, budget.Category.Name, budget.Category.Icon, budget.Category.Color, budget.Category.Type };
+
+    var resp = new
+    {
+      budget.BudgetId,
+      budget.Amount,
+      Spent = spent,
+      Remaining = remaining,
+      LastReset = budget.LastReset,
+      Category = category
+    };
+
+    return Results.Ok(resp);
+  }
+
+  private static async Task<IResult> GetAllBudgetsStatus(FinancetrackerContext db, HttpContext http)
+  {
+    if (!http.TryGetUserId(out var userId))
+      return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
+
+    var budgets = await db.Budgets.Include(b => b.Category).Where(b => b.UserId == userId).ToListAsync();
+
+    // To avoid multiple DB round-trips, load all transactions for the user since the earliest last reset among budgets
+    var earliest = budgets.Where(b => b.LastReset.HasValue).Select(b => b.LastReset!.Value).DefaultIfEmpty(DateTime.UtcNow).Min();
+
+    var transactions = await db.Transactions.Include(t => t.Category).Where(t => t.UserId == userId && t.Date >= earliest).ToListAsync();
+
+    var results = budgets.Select(b =>
+    {
+      var since = b.LastReset ?? DateTime.UtcNow;
+      var relevant = transactions.Where(t => t.Date >= since && (b.CategoryId == null || t.CategoryId == b.CategoryId));
+      var spent = relevant.Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
+                          .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
+      var remaining = b.Amount - spent;
+      var category = b.Category == null ? null : new { b.Category.CategoryId, b.Category.Name, b.Category.Icon, b.Category.Color, b.Category.Type };
+
+      return new
+      {
+        b.BudgetId,
+        b.Amount,
+        Spent = spent,
+        Remaining = remaining,
+        LastReset = b.LastReset,
+        Category = category,
+        CategoryId = b.CategoryId
+      };
+    })
+    .OrderBy(r => r.CategoryId)
+    .ToList();
+
+    return Results.Ok(results);
   }
 }
