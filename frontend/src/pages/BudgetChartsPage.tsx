@@ -53,6 +53,11 @@ export default function BudgetChartsPage() {
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
+                    {percent > 90 && (
+                      <Box sx={{ position: 'absolute', top: 4, right: 4, width: 18, height: 18, borderRadius: '50%', bgcolor: theme.palette.error.main, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 'bold', pointerEvents: 'none' }}>
+                        !
+                      </Box>
+                    )}
                   </Box>
                 <Box sx={{ flex: 1 }}>
                   <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
@@ -69,7 +74,7 @@ export default function BudgetChartsPage() {
                   </Box>
                   <SmallBar percent={percent} color={color} />
                   <Box display="flex" justifyContent="space-between" mt={1}>
-                    <Typography variant="caption">{percent}% used</Typography>
+                    <Typography variant="caption">{percent}% used{percent > 90 ? ' !' : ''}</Typography>
                     <Typography variant="caption">{b.startDate ? new Date(b.startDate).toLocaleDateString() : ''}
                       {b.endDate ? `- ${new Date(b.endDate).toLocaleDateString()}` : ''}</Typography>
                     {b.category && (
