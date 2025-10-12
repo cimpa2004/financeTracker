@@ -14,6 +14,7 @@ import { AppLayout } from './layouts/AppLayout';
 import AddTransaction from './pages/AddTransactionForm';
 import AddCategoryPage from './pages/AddCategoryPage';
 import WelcomePage from './pages/WelcomePage';
+import BudgetChartsPage from './pages/BudgetChartsPage';
 
 const router = createBrowserRouter([
   {
@@ -49,6 +50,10 @@ const router = createBrowserRouter([
               {
                 path: ROUTES.ADD_CATEGORY,
                 element: <AddCategoryPage />,
+              },
+              {
+                path: ROUTES.BUDGET_CHARTS,
+                element: <BudgetChartsPage />,
               }
             ],
         },

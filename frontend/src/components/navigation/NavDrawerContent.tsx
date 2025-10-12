@@ -2,10 +2,28 @@ import { Box, Button, Paper, Stack } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
+import HomeIcon from '@mui/icons-material/Home';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import CategoryIcon from '@mui/icons-material/Category';
+import PieChartIcon from '@mui/icons-material/PieChart';
 import NavItem from "./NavItem";
 import { ROUTES } from "../../constants";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+
+type PageDef = {
+  name: string;
+  route: string;
+  icon?: React.ReactNode;
+};
+
+// Pages shown in the nav drawer. Update this list to control visible pages.
+const PAGES: PageDef[] = [
+  { name: 'Home', route: ROUTES.HOME, icon: <HomeIcon /> },
+  { name: 'Add Transaction', route: ROUTES.ADD_TRANSACTION, icon: <AddShoppingCartIcon /> },
+  { name: 'Add Category', route: ROUTES.ADD_CATEGORY, icon: <CategoryIcon /> },
+  { name: 'Budget Charts', route: ROUTES.BUDGET_CHARTS, icon: <PieChartIcon /> }
+];
 
 interface NavDrawerContentProps {
   closeDrawer: () => void;
@@ -30,9 +48,9 @@ export default function NavDrawerContent({ closeDrawer }: NavDrawerContentProps)
           </Button>
         </Box>
         <Box>
-          <NavItem name="Home" route={ROUTES.HOME} closeDrawer={closeDrawer} />
-          <NavItem name="Add Transaction" route={ROUTES.ADD_TRANSACTION} closeDrawer={closeDrawer} />
-          <NavItem name="Add Category" route={ROUTES.ADD_CATEGORY} closeDrawer={closeDrawer} />
+          {PAGES.map(p => (
+            <NavItem key={p.route} name={p.name} route={p.route} icon={p.icon} closeDrawer={closeDrawer} />
+          ))}
         </Box>
         </Stack>
         <Box sx={{ p: 2 }}>

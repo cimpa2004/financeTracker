@@ -5,5 +5,6 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   ADD_TRANSACTION: '/add-transaction',
-  ADD_CATEGORY: '/add-category'
+  ADD_CATEGORY: '/add-category',
+  BUDGET_CHARTS: '/budget-charts',
 }

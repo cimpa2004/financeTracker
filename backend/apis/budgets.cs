@@ -230,32 +230,41 @@ public static class BudgetsApi
   {
     if (!http.TryGetUserId(out var userId))
       return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
-
     var budget = await db.Budgets.Include(b => b.Category).FirstOrDefaultAsync(b => b.BudgetId == id && b.UserId == userId);
 
     if (budget == null)
       return Results.NotFound(new { error = BudgetNotFoundMessage });
 
-    // Determine the period for this budget: start = StartDate || CreatedAt || now, end = EndDate || now
-    var since = budget.StartDate ?? budget.CreatedAt ?? DateTime.UtcNow;
-    var until = budget.EndDate ?? DateTime.UtcNow;
+    var start = budget.StartDate ?? DateTime.MinValue;
+    var end = budget.EndDate ?? DateTime.MaxValue;
 
     var transactions = await db.Transactions
       .Include(t => t.Category)
-      .Where(t => t.UserId == userId && t.Date >= since && t.Date <= until && (budget.CategoryId == null || t.CategoryId == budget.CategoryId))
+      .Where(t => t.UserId == userId)
       .ToListAsync();
 
-    var spent = transactions
-        .Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
-        .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
+    DateTime GetTxDate(Transaction t) => t.Date ?? t.CreatedAt ?? DateTime.MinValue;
+
+    var relevant = transactions.Where(t =>
+      (budget.CategoryId == null || t.CategoryId == budget.CategoryId)
+      && GetTxDate(t) >= start
+      && GetTxDate(t) <= end
+    );
+
+    var spent = relevant
+      .Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
+      .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
 
     var remaining = budget.Amount - spent;
 
-    var category = budget.Category == null ? null : new { budget.Category.CategoryId, budget.Category.Name, budget.Category.Icon, budget.Category.Color, budget.Category.Type };
+    object? category = null;
+    if (budget.Category != null)
+      category = new { budget.Category.CategoryId, budget.Category.Name, budget.Category.Icon, budget.Category.Color, budget.Category.Type };
 
     var resp = new
     {
       budget.BudgetId,
+      budget.Name,
       budget.Amount,
       Spent = spent,
       Remaining = remaining,
@@ -272,27 +281,38 @@ public static class BudgetsApi
   {
     if (!http.TryGetUserId(out var userId))
       return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
+    var budgets = await db.Budgets.Include(b => b.Category).Where(b => b.UserId == userId).OrderBy(b => b.CategoryId).ToListAsync();
 
-    var budgets = await db.Budgets.Include(b => b.Category).Where(b => b.UserId == userId).ToListAsync();
+    // load all transactions for the user once and compute per-budget totals in-memory
+    var transactions = await db.Transactions.Include(t => t.Category).Where(t => t.UserId == userId).ToListAsync();
 
-    // To avoid multiple DB round-trips, load all transactions for the user since the earliest budget start/created date among budgets
-    var earliest = budgets.Select(b => b.StartDate ?? b.CreatedAt ?? DateTime.UtcNow).DefaultIfEmpty(DateTime.UtcNow).Min();
-
-    var transactions = await db.Transactions.Include(t => t.Category).Where(t => t.UserId == userId && t.Date >= earliest).ToListAsync();
+    DateTime GetTxDate(Transaction t) => t.Date ?? t.CreatedAt ?? DateTime.MinValue;
 
     var results = budgets.Select(b =>
     {
-      var since = b.StartDate ?? b.CreatedAt ?? DateTime.UtcNow;
-      var until = b.EndDate ?? DateTime.UtcNow;
-      var relevant = transactions.Where(t => t.Date >= since && t.Date <= until && (b.CategoryId == null || t.CategoryId == b.CategoryId));
-      var spent = relevant.Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
-                          .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
+      var start = b.StartDate ?? DateTime.MinValue;
+      var end = b.EndDate ?? DateTime.MaxValue;
+
+      var relevant = transactions.Where(t =>
+        (b.CategoryId == null || t.CategoryId == b.CategoryId)
+        && GetTxDate(t) >= start
+        && GetTxDate(t) <= end
+      );
+
+      var spent = relevant
+        .Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
+        .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
+
       var remaining = b.Amount - spent;
-      var category = b.Category == null ? null : new { b.Category.CategoryId, b.Category.Name, b.Category.Icon, b.Category.Color, b.Category.Type };
+
+      object? category = null;
+      if (b.Category != null)
+        category = new { b.Category.CategoryId, b.Category.Name, b.Category.Icon, b.Category.Color, b.Category.Type };
 
       return new
       {
         b.BudgetId,
+        b.Name,
         b.Amount,
         Spent = spent,
         Remaining = remaining,
