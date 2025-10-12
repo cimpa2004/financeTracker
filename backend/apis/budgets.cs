@@ -11,8 +11,8 @@ public static class BudgetsApi
   private static readonly string CategoryNotFoundMessage = "Category not found.";
   private static readonly string AmountMustBePositive = "Amount must be greater than or equal to 0.";
 
-  public record AddBudgetRequest(Guid? CategoryId, decimal Amount);
-  public record UpdateBudgetRequest(Guid? CategoryId, decimal Amount);
+  public record AddBudgetRequest(Guid? CategoryId, decimal Amount, string? Name, DateTime? StartDate, DateTime? EndDate);
+  public record UpdateBudgetRequest(Guid? CategoryId, decimal Amount, string? Name, DateTime? StartDate, DateTime? EndDate);
 
   public static void MapBudgets(this WebApplication app)
   {
@@ -65,8 +65,11 @@ public static class BudgetsApi
       BudgetId = Guid.NewGuid(),
       UserId = userId,
       CategoryId = (req.CategoryId.HasValue && req.CategoryId.Value != Guid.Empty) ? req.CategoryId : null,
+      Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim(),
+      StartDate = req.StartDate,
+      EndDate = req.EndDate,
       Amount = req.Amount,
-      LastReset = DateTime.UtcNow
+      CreatedAt = DateTime.UtcNow
     };
 
     db.Budgets.Add(budget);
@@ -86,8 +89,11 @@ public static class BudgetsApi
     var created = new
     {
       budget.BudgetId,
+      budget.Name,
       budget.Amount,
-      budget.LastReset,
+      budget.StartDate,
+      budget.EndDate,
+      budget.CreatedAt,
       Category = category,
       User = new { UserId = budget.UserId }
     };
@@ -107,8 +113,11 @@ public static class BudgetsApi
         .Select(b => new
         {
           b.BudgetId,
+          b.Name,
           b.Amount,
-          b.LastReset,
+          b.StartDate,
+          b.EndDate,
+          b.CreatedAt,
           Category = b.Category == null ? null : new { b.Category.CategoryId, b.Category.Name, b.Category.Icon, b.Category.Color, b.Category.Type }
         })
         .ToListAsync();
@@ -135,8 +144,11 @@ public static class BudgetsApi
     var budget = new
     {
       budgetEntity.BudgetId,
+      budgetEntity.Name,
       budgetEntity.Amount,
-      budgetEntity.LastReset,
+      budgetEntity.StartDate,
+      budgetEntity.EndDate,
+      budgetEntity.CreatedAt,
       Category = cat
     };
 
@@ -167,6 +179,9 @@ public static class BudgetsApi
     }
 
     budget.CategoryId = (req.CategoryId.HasValue && req.CategoryId.Value != Guid.Empty) ? req.CategoryId : null;
+    budget.Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim();
+    budget.StartDate = req.StartDate;
+    budget.EndDate = req.EndDate;
     budget.Amount = req.Amount;
 
     await db.SaveChangesAsync();
@@ -184,8 +199,11 @@ public static class BudgetsApi
     var response = new
     {
       budget.BudgetId,
+      budget.Name,
       budget.Amount,
-      budget.LastReset,
+      budget.StartDate,
+      budget.EndDate,
+      budget.CreatedAt,
       Category = updatedCat
     };
 
@@ -218,12 +236,14 @@ public static class BudgetsApi
     if (budget == null)
       return Results.NotFound(new { error = BudgetNotFoundMessage });
 
-    var since = budget.LastReset ?? DateTime.UtcNow;
+    // Determine the period for this budget: start = StartDate || CreatedAt || now, end = EndDate || now
+    var since = budget.StartDate ?? budget.CreatedAt ?? DateTime.UtcNow;
+    var until = budget.EndDate ?? DateTime.UtcNow;
 
     var transactions = await db.Transactions
-        .Include(t => t.Category)
-        .Where(t => t.UserId == userId && t.Date >= since && (budget.CategoryId == null || t.CategoryId == budget.CategoryId))
-        .ToListAsync();
+      .Include(t => t.Category)
+      .Where(t => t.UserId == userId && t.Date >= since && t.Date <= until && (budget.CategoryId == null || t.CategoryId == budget.CategoryId))
+      .ToListAsync();
 
     var spent = transactions
         .Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
@@ -239,7 +259,9 @@ public static class BudgetsApi
       budget.Amount,
       Spent = spent,
       Remaining = remaining,
-      LastReset = budget.LastReset,
+      StartDate = budget.StartDate,
+      EndDate = budget.EndDate,
+      CreatedAt = budget.CreatedAt,
       Category = category
     };
 
@@ -253,15 +275,16 @@ public static class BudgetsApi
 
     var budgets = await db.Budgets.Include(b => b.Category).Where(b => b.UserId == userId).ToListAsync();
 
-    // To avoid multiple DB round-trips, load all transactions for the user since the earliest last reset among budgets
-    var earliest = budgets.Where(b => b.LastReset.HasValue).Select(b => b.LastReset!.Value).DefaultIfEmpty(DateTime.UtcNow).Min();
+    // To avoid multiple DB round-trips, load all transactions for the user since the earliest budget start/created date among budgets
+    var earliest = budgets.Select(b => b.StartDate ?? b.CreatedAt ?? DateTime.UtcNow).DefaultIfEmpty(DateTime.UtcNow).Min();
 
     var transactions = await db.Transactions.Include(t => t.Category).Where(t => t.UserId == userId && t.Date >= earliest).ToListAsync();
 
     var results = budgets.Select(b =>
     {
-      var since = b.LastReset ?? DateTime.UtcNow;
-      var relevant = transactions.Where(t => t.Date >= since && (b.CategoryId == null || t.CategoryId == b.CategoryId));
+      var since = b.StartDate ?? b.CreatedAt ?? DateTime.UtcNow;
+      var until = b.EndDate ?? DateTime.UtcNow;
+      var relevant = transactions.Where(t => t.Date >= since && t.Date <= until && (b.CategoryId == null || t.CategoryId == b.CategoryId));
       var spent = relevant.Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
                           .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
       var remaining = b.Amount - spent;
@@ -273,7 +296,9 @@ public static class BudgetsApi
         b.Amount,
         Spent = spent,
         Remaining = remaining,
-        LastReset = b.LastReset,
+        StartDate = b.StartDate,
+        EndDate = b.EndDate,
+        CreatedAt = b.CreatedAt,
         Category = category,
         CategoryId = b.CategoryId
       };
