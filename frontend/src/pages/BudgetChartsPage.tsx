@@ -1,9 +1,13 @@
-import { Box, Typography, CircularProgress, Card, CardContent, Fab, Dialog, DialogTitle, DialogContent, Snackbar } from '@mui/material';
+import { Box, Typography, CircularProgress, Card, CardContent, Fab, Dialog, DialogTitle, DialogContent, Snackbar, Button, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useTheme } from '@mui/material/styles';
-import { useAllBudgetsStatus } from '../apis/Budget';
+import { useAllBudgetsStatus, useDeleteBudget } from '../apis/Budget';
+import type { BudgetStatus } from '../types/Budget';
+import getIntervalFromDates from '../utils/dateInterval';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import AddBudgetForm from '../components/AddBudgetForm';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { useState } from 'react';
 
 function SmallBar({ percent, color }: { percent: number; color: string }) {
@@ -16,13 +20,21 @@ function SmallBar({ percent, color }: { percent: number; color: string }) {
 
 export default function BudgetChartsPage() {
   const [open, setOpen] = useState(false);
-  const handleOpen = () => setOpen(true);
+  const handleOpen = () => { setEditingBudget(null); setOpen(true); };
   const handleClose = () => setOpen(false);
+  const [editingBudget, setEditingBudget] = useState<BudgetStatus | null>(null);
+  const openEdit = (budget: BudgetStatus) => { setEditingBudget(budget); setOpen(true); };
   const [snackOpen, setSnackOpen] = useState(false);
-  const showSnack = () => setSnackOpen(true);
+  const [snackMessage, setSnackMessage] = useState<string>('');
+  const showSnack = (msg: string) => { setSnackMessage(msg); setSnackOpen(true); };
   const hideSnack = () => setSnackOpen(false);
   const theme = useTheme();
   const { data, isLoading, isError } = useAllBudgetsStatus();
+  const deleteMutation = useDeleteBudget();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [toDeleteId, setToDeleteId] = useState<string | null>(null);
+  const openConfirm = (id: string) => { setToDeleteId(id); setConfirmOpen(true); };
+  const closeConfirm = () => { setToDeleteId(null); setConfirmOpen(false); };
 
   if (isLoading) return <CircularProgress />;
   if (isError) return <Box>Error loading budgets</Box>;
@@ -38,7 +50,7 @@ export default function BudgetChartsPage() {
   }
 
   return (
-    <Box p={2}>
+    <Box p={2} justifyContent="center" alignItems="center" width="100vw">
       <Typography variant="h4" gutterBottom>
         Budgets Overview
       </Typography>
@@ -90,7 +102,14 @@ export default function BudgetChartsPage() {
                       <Typography variant="caption" align="center" sx={{ fontSize: 11 }}>{b.category.name}</Typography>
                     )}
                   </Box>
-
+                    <Box display={'flex'} justifyContent={'flex-end'}>
+                      <IconButton color="primary" onClick={() => openEdit(b)} aria-label={`edit-${b.budgetId}`}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton color="error" onClick={() => openConfirm(b.budgetId)} aria-label={`delete-${b.budgetId}`}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                 </Box>
               </CardContent>
             </Card>
@@ -101,10 +120,40 @@ export default function BudgetChartsPage() {
         <AddIcon />
       </Fab>
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-        <DialogTitle>Add Budget</DialogTitle>
+      <Dialog open={open} onClose={() => { setEditingBudget(null); handleClose(); }} fullWidth maxWidth="sm">
+        <DialogTitle>{editingBudget ? 'Edit Budget' : 'Add Budget'}</DialogTitle>
         <DialogContent>
-          <AddBudgetForm onSuccess={() => { handleClose(); showSnack(); }} />
+          <AddBudgetForm
+            budgetId={editingBudget?.budgetId ?? null}
+            initialValues={editingBudget ? {
+              categoryId: editingBudget.category?.categoryId ?? null,
+              amount: editingBudget.amount,
+              name: editingBudget.name ?? '',
+              interval: getIntervalFromDates(editingBudget.startDate ?? null, editingBudget.endDate ?? null),
+              startDate: editingBudget.startDate ?? '',
+              endDate: editingBudget.endDate ?? '',
+            } : undefined}
+            onSuccess={() => { setEditingBudget(null); handleClose(); showSnack(editingBudget ? 'Budget updated' : 'Budget added'); }}
+          />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={confirmOpen} onClose={closeConfirm}>
+        <DialogTitle>Delete budget?</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this budget? This action cannot be undone.</Typography>
+          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 2 }}>
+            <Button onClick={closeConfirm}>Cancel</Button>
+            <Button color="error" onClick={async () => {
+              if (!toDeleteId) return;
+              try {
+                await deleteMutation.mutateAsync(toDeleteId);
+                closeConfirm();
+                showSnack('Budget deleted');
+              } catch (err) {
+                console.error('delete failed', err);
+              }
+            }}>Delete</Button>
+          </Box>
         </DialogContent>
       </Dialog>
       <Snackbar
@@ -115,7 +164,7 @@ export default function BudgetChartsPage() {
       >
         <Box sx={{ p: 0.5 }}>
           <Box sx={{ bgcolor: theme.palette.success.main, color: theme.palette.getContrastText(theme.palette.success.main), px: 2, py: 1, borderRadius: 1, boxShadow: 3 }}>
-            Budget added
+            {snackMessage}
           </Box>
         </Box>
       </Snackbar>

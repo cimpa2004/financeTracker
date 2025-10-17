@@ -1,5 +1,5 @@
 import { Controller, useForm } from 'react-hook-form';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useSmallScreen } from '../hooks/useSmallScreen';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -18,16 +18,21 @@ import {
 } from '@mui/material';
 
 import { BudgetFormSchema, type BudgetFormInput } from '../types/Budget';
-import { useAddBudget } from '../apis/Budget';
+import { useAddBudget, useUpdateBudget } from '../apis/Budget';
 import { useCategories } from '../apis/Category';
+import getRangeForInterval from '../utils/intervalRange';
 
 type AddBudgetFormProps = {
 	onSuccess?: () => void;
+	budgetId?: string | null;
+	initialValues?: Partial<BudgetFormInput>;
 };
 
-export default function AddBudgetForm({ onSuccess }: AddBudgetFormProps) {
+export default function AddBudgetForm({ onSuccess, budgetId = null, initialValues }: AddBudgetFormProps) {
 	const { data: categories = [] } = useCategories();
-	const { mutate: addBudget, isPending, isError, error, isSuccess } = useAddBudget();
+	const { mutateAsync: addBudgetAsync } = useAddBudget();
+	const { mutateAsync: updateBudgetAsync } = useUpdateBudget(budgetId ?? null);
+	const [mutationError, setMutationError] = useState<string | null>(null);
 
 	const {
 		control,
@@ -49,55 +54,61 @@ export default function AddBudgetForm({ onSuccess }: AddBudgetFormProps) {
 		},
 	});
 
-	const onSubmit = (data: BudgetFormInput) => {
-		// if the user selected "All categories" the select sets an empty string; send null to the API
-		const payload: BudgetFormInput = { ...data, categoryId: data.categoryId === '' ? null : data.categoryId };
+	// if initial values are provided (edit mode), populate the form
+	useEffect(() => {
+		if (initialValues) {
+			if (initialValues.categoryId !== undefined) setValue('categoryId', initialValues.categoryId ?? null);
+			if (initialValues.amount !== undefined) setValue('amount', initialValues.amount as number);
+			if (initialValues.name !== undefined) setValue('name', initialValues.name ?? '');
+			if (initialValues.interval !== undefined) setValue('interval', initialValues.interval as 'weekly' | 'monthly' | 'yearly' | 'All time');
+			if (initialValues.startDate !== undefined) setValue('startDate', initialValues.startDate ?? '');
+			if (initialValues.endDate !== undefined) setValue('endDate', initialValues.endDate ?? '');
+		}
+	}, [initialValues, setValue]);
 
-		addBudget(payload, {
-			onSuccess: () => {
+	const onSubmit = async (data: BudgetFormInput) => {
+		setMutationError(null);
+		// normalize categoryId and dates
+		const normalizedCategoryId = data.categoryId === '' ? null : data.categoryId;
+		let payloadStart = data.startDate ?? null;
+		let payloadEnd = data.endDate ?? null;
+		if (data.interval === 'All time') {
+			payloadStart = null;
+			payloadEnd = null;
+		}
+		const payload: BudgetFormInput = { ...data, categoryId: normalizedCategoryId, startDate: payloadStart, endDate: payloadEnd };
+
+		try {
+			if (budgetId) {
+				await updateBudgetAsync(payload);
+				if (onSuccess) onSuccess();
+			} else {
+				await addBudgetAsync(payload);
 				reset({ categoryId: null, amount: 0, name: '', interval: 'monthly', startDate: '', endDate: '' });
 				if (onSuccess) onSuccess();
-			},
-		});
+			}
+		} catch (e: unknown) {
+			const msg = e instanceof Error ? e.message : String(e);
+			setMutationError(msg || 'Failed to save budget');
+		}
 	};
 
 	const isSmall = useSmallScreen();
 
-	// helper to format Date -> YYYY-MM-DD
-	const fmt = (d: Date) => d.toISOString().slice(0, 10);
-
-	const getRangeForInterval = useCallback((interval: string) => {
-		const now = new Date();
-		if (interval === 'weekly') {
-			// week starting Monday
-			const day = now.getDay();
-			const diff = (day + 6) % 7; // days since Monday
-			const start = new Date(now);
-			start.setDate(now.getDate() - diff);
-			start.setHours(0, 0, 0, 0);
-			const end = new Date(start);
-			end.setDate(start.getDate() + 6);
-			end.setHours(23, 59, 59, 999);
-			return { start: fmt(start), end: fmt(end) };
-		}
-		if (interval === 'yearly') {
-			const start = new Date(now.getFullYear(), 0, 1);
-			const end = new Date(now.getFullYear(), 11, 31);
-			return { start: fmt(start), end: fmt(end) };
-		}
-		// default monthly
-		const start = new Date(now.getFullYear(), now.getMonth(), 1);
-		const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-		return { start: fmt(start), end: fmt(end) };
-	}, []);
+	// use shared utility getRangeForInterval(interval) -> { start, end }
 
 	// initialize and respond to interval changes
 	const watchedInterval = watch('interval');
 	useEffect(() => {
 		const { start, end } = getRangeForInterval(watchedInterval || 'monthly');
-		setValue('startDate', start, { shouldDirty: true });
-		setValue('endDate', end, { shouldDirty: true });
-	}, [getRangeForInterval, watchedInterval, setValue]);
+		// set nullable values; react-hook-form accepts null for nullable fields
+		setValue('startDate', start ?? '', { shouldDirty: true });
+		setValue('endDate', end ?? '', { shouldDirty: true });
+	}, [watchedInterval, setValue]);
+
+	let submitLabel = 'Add budget';
+	if (isSubmitting) submitLabel = 'Saving...';
+	else if (budgetId) submitLabel = 'Save changes';
 
 	return (
 		<Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', p: 2 }}>
@@ -106,15 +117,9 @@ export default function AddBudgetForm({ onSuccess }: AddBudgetFormProps) {
 				Add Budget
 			</Typography>
 
-			{isError && (
+			{mutationError && (
 				<Alert severity="error" sx={{ mb: 2 }}>
-					{error?.message || 'Failed to add budget'}
-				</Alert>
-			)}
-
-			{isSuccess && (
-				<Alert severity="success" sx={{ mb: 2 }}>
-					Budget added
+					{mutationError}
 				</Alert>
 			)}
 
@@ -140,7 +145,7 @@ export default function AddBudgetForm({ onSuccess }: AddBudgetFormProps) {
 								fullWidth
 								type="number"
 								inputMode="decimal"
-								slotProps={{ input: { startAdornment: <InputAdornment position="start">$</InputAdornment> } }}
+								slotProps={{ input: { endAdornment: <InputAdornment position="end">Ft</InputAdornment> } }}
 							/>
 						</Box>
 					</Box>
@@ -157,6 +162,7 @@ export default function AddBudgetForm({ onSuccess }: AddBudgetFormProps) {
 											<MenuItem value="weekly">Weekly</MenuItem>
 											<MenuItem value="monthly">Monthly</MenuItem>
 											<MenuItem value="yearly">Yearly</MenuItem>
+													<MenuItem value="All time">All time</MenuItem>
 										</Select>
 										{errors.interval && <FormHelperText>{errors.interval?.message}</FormHelperText>}
 									</FormControl>
@@ -197,8 +203,8 @@ export default function AddBudgetForm({ onSuccess }: AddBudgetFormProps) {
 						</Box>
 					</Box>
 					<Box>
-						<Button type="submit" variant="contained" color="primary" disabled={isPending || isSubmitting} fullWidth>
-							{isPending ? 'Saving...' : 'Add budget'}
+						<Button type="submit" variant="contained" color="primary" disabled={isSubmitting} fullWidth>
+							{submitLabel}
 						</Button>
 					</Box>
 				</Stack>

@@ -31,7 +31,7 @@ export const BudgetFormSchema = z.object({
 	name: z.string().max(255).nullable().optional(),
 	startDate: z.string().nullable().optional(),
 	endDate: z.string().nullable().optional(),
-	interval: z.enum(['weekly', 'monthly', 'yearly']).nullable().optional(),
+	interval: z.enum(['weekly', 'monthly', 'yearly', 'All time']).nullable().optional(),
 });
 
 export type Budget = z.infer<typeof BudgetSchema>;

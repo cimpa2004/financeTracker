@@ -77,7 +77,7 @@ function App() {
 
   return (
     <QueryClientProvider client={querryClient}>
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition='bottom-right' />
+      {/* <ReactQueryDevtools initialIsOpen={false} buttonPosition='bottom-right' /> */}
       <AppThemeProvider>
         <ToastProvider>
           <AuthProvider>

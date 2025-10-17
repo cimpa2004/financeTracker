@@ -60,7 +60,7 @@ export function useUpdateBudget(id: string | null) {
 }
 
 async function deleteBudget(id: string) {
-  return httpService.delete(`budgets/${id}`, z.void());
+  return httpService.delete(`budgets/${id}`, z.string());
 }
 
 export function useDeleteBudget() {
