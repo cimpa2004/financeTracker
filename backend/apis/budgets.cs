@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using backend.Models;
 using backend.services;
+using backend.Helpers;
 
 namespace backend.apis;
 
@@ -45,6 +46,8 @@ public static class BudgetsApi
        .WithName("DeleteBudget");
   }
 
+  // Use helpers from backend.Helpers.BudgetHelpers
+
   private static async Task<IResult> AddBudget(AddBudgetRequest req, FinancetrackerContext db, HttpContext http)
   {
     if (!http.TryGetUserId(out var userId))
@@ -86,13 +89,15 @@ public static class BudgetsApi
       }
     }
 
+    var (createdStart, createdEnd) = backend.Helpers.BudgetHelpers.NormalizeRangeForResponse(budget.StartDate, budget.EndDate);
+
     var created = new
     {
       budget.BudgetId,
       budget.Name,
       budget.Amount,
-      budget.StartDate,
-      budget.EndDate,
+      StartDate = createdStart,
+      EndDate = createdEnd,
       budget.CreatedAt,
       Category = category,
       User = new { UserId = budget.UserId }
@@ -106,21 +111,26 @@ public static class BudgetsApi
     if (!http.TryGetUserId(out var userId))
       return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
 
-    var budgets = await db.Budgets
+    var budgetEntities = await db.Budgets
         .Include(b => b.Category)
         .Where(b => b.UserId == userId)
         .OrderBy(b => b.CategoryId)
-        .Select(b => new
-        {
-          b.BudgetId,
-          b.Name,
-          b.Amount,
-          b.StartDate,
-          b.EndDate,
-          b.CreatedAt,
-          Category = b.Category == null ? null : new { b.Category.CategoryId, b.Category.Name, b.Category.Icon, b.Category.Color, b.Category.Type }
-        })
         .ToListAsync();
+
+    var budgets = budgetEntities.Select(b =>
+    {
+      var (rs, re) = backend.Helpers.BudgetHelpers.NormalizeRangeForResponse(b.StartDate, b.EndDate);
+      return new
+      {
+        b.BudgetId,
+        b.Name,
+        b.Amount,
+        StartDate = rs,
+        EndDate = re,
+        b.CreatedAt,
+        Category = b.Category == null ? null : new { b.Category.CategoryId, b.Category.Name, b.Category.Icon, b.Category.Color, b.Category.Type }
+      };
+    }).ToList();
 
     return Results.Ok(budgets);
   }
@@ -141,13 +151,14 @@ public static class BudgetsApi
       cat = new { budgetEntity.Category.CategoryId, budgetEntity.Category.Name, budgetEntity.Category.Icon, budgetEntity.Category.Color, budgetEntity.Category.Type };
     }
 
+    var (bStart, bEnd) = backend.Helpers.BudgetHelpers.NormalizeRangeForResponse(budgetEntity.StartDate, budgetEntity.EndDate);
     var budget = new
     {
       budgetEntity.BudgetId,
       budgetEntity.Name,
       budgetEntity.Amount,
-      budgetEntity.StartDate,
-      budgetEntity.EndDate,
+      StartDate = bStart,
+      EndDate = bEnd,
       budgetEntity.CreatedAt,
       Category = cat
     };
@@ -171,13 +182,11 @@ public static class BudgetsApi
     if (budget == null)
       return Results.NotFound(new { error = BudgetNotFoundMessage });
 
-    if (req.CategoryId.HasValue && req.CategoryId.Value != Guid.Empty)
-    {
-      var exists = await db.Categories.AnyAsync(c => c.CategoryId == req.CategoryId.Value && (c.UserId == userId || c.UserId == null));
-      if (!exists)
-        return Results.BadRequest(new { error = CategoryNotFoundMessage });
-    }
+    // Validate category if provided
+    if (!await backend.Helpers.BudgetHelpers.ValidateCategoryExistsAsync(req.CategoryId, db, userId))
+      return Results.BadRequest(new { error = CategoryNotFoundMessage });
 
+    // Apply updates
     budget.CategoryId = (req.CategoryId.HasValue && req.CategoryId.Value != Guid.Empty) ? req.CategoryId : null;
     budget.Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim();
     budget.StartDate = req.StartDate;
@@ -186,23 +195,17 @@ public static class BudgetsApi
 
     await db.SaveChangesAsync();
 
-    object? updatedCat = null;
-    if (budget.CategoryId != null)
-    {
-      await db.Entry(budget).Reference(b => b.Category).LoadAsync();
-      if (budget.Category != null)
-      {
-        updatedCat = new { budget.Category.CategoryId, budget.Category.Name, budget.Category.Icon, budget.Category.Color, budget.Category.Type };
-      }
-    }
+    var updatedCat = await backend.Helpers.BudgetHelpers.BuildCategoryObjectAsync(budget, db);
+
+    var (uStart, uEnd) = backend.Helpers.BudgetHelpers.NormalizeRangeForResponse(budget.StartDate, budget.EndDate);
 
     var response = new
     {
       budget.BudgetId,
       budget.Name,
       budget.Amount,
-      budget.StartDate,
-      budget.EndDate,
+      StartDate = uStart,
+      EndDate = uEnd,
       budget.CreatedAt,
       Category = updatedCat
     };
@@ -261,6 +264,8 @@ public static class BudgetsApi
     if (budget.Category != null)
       category = new { budget.Category.CategoryId, budget.Category.Name, budget.Category.Icon, budget.Category.Color, budget.Category.Type };
 
+    var (sNorm, eNorm) = backend.Helpers.BudgetHelpers.NormalizeRangeForResponse(budget.StartDate, budget.EndDate);
+
     var resp = new
     {
       budget.BudgetId,
@@ -268,8 +273,8 @@ public static class BudgetsApi
       budget.Amount,
       Spent = spent,
       Remaining = remaining,
-      StartDate = budget.StartDate,
-      EndDate = budget.EndDate,
+      StartDate = sNorm,
+      EndDate = eNorm,
       CreatedAt = budget.CreatedAt,
       Category = category
     };
@@ -309,6 +314,8 @@ public static class BudgetsApi
       if (b.Category != null)
         category = new { b.Category.CategoryId, b.Category.Name, b.Category.Icon, b.Category.Color, b.Category.Type };
 
+      var (rs, re) = backend.Helpers.BudgetHelpers.NormalizeRangeForResponse(b.StartDate, b.EndDate);
+
       return new
       {
         b.BudgetId,
@@ -316,14 +323,14 @@ public static class BudgetsApi
         b.Amount,
         Spent = spent,
         Remaining = remaining,
-        StartDate = b.StartDate,
-        EndDate = b.EndDate,
+        StartDate = rs,
+        EndDate = re,
         CreatedAt = b.CreatedAt,
         Category = category,
         CategoryId = b.CategoryId
       };
     })
-    .OrderBy(r => r.CategoryId)
+  .OrderBy(r => r.CreatedAt)
     .ToList();
 
     return Results.Ok(results);

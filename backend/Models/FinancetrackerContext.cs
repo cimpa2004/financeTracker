@@ -33,7 +33,12 @@ public partial class FinancetrackerContext : DbContext
   public virtual DbSet<Subscription> Subscriptions { get; set; }
 
   protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-      => optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=financetracker;Trusted_Connection=True;MultipleActiveResultSets=true;");
+  {
+    if (!optionsBuilder.IsConfigured)
+    {
+      optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=financetracker;Trusted_Connection=True;MultipleActiveResultSets=true;");
+    }
+  }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
