@@ -1,5 +1,6 @@
 import { httpService } from '../services/httpService';
 import { BudgetSchema, BudgetArraySchema, BudgetStatusSchema, BudgetsStatusArraySchema } from '../types/Budget';
+import { TransactionArraySchema } from '../types/Transaction';
 import type { BudgetFormInput } from '../types/Budget';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -82,4 +83,12 @@ async function getAllBudgetsStatus() {
 
 export function useAllBudgetsStatus() {
   return useQuery({ queryKey: ['budgets', 'status'], queryFn: getAllBudgetsStatus });
+}
+
+async function getBudgetTransactions(id: string) {
+  return httpService.get(`budgets/${id}/transactions`, TransactionArraySchema);
+}
+
+export function useBudgetTransactions(id: string | null) {
+  return useQuery({ queryKey: ['budgets', id, 'transactions'], queryFn: () => getBudgetTransactions(id || ''), enabled: !!id });
 }

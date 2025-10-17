@@ -2,6 +2,7 @@ import { Box, Typography, CircularProgress, Card, CardContent, Fab, Dialog, Dial
 import AddIcon from '@mui/icons-material/Add';
 import { useTheme } from '@mui/material/styles';
 import { useAllBudgetsStatus, useDeleteBudget } from '../apis/Budget';
+import BudgetDetails from '../components/BudgetDetails';
 import type { BudgetStatus } from '../types/Budget';
 import getIntervalFromDates from '../utils/dateInterval';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -35,19 +36,14 @@ export default function BudgetChartsPage() {
   const [toDeleteId, setToDeleteId] = useState<string | null>(null);
   const openConfirm = (id: string) => { setToDeleteId(id); setConfirmOpen(true); };
   const closeConfirm = () => { setToDeleteId(null); setConfirmOpen(false); };
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsBudgetId, setDetailsBudgetId] = useState<string | null>(null);
+  const openDetails = (id: string) => { setDetailsBudgetId(id); setDetailsOpen(true); };
 
   if (isLoading) return <CircularProgress />;
   if (isError) return <Box>Error loading budgets</Box>;
 
   const budgets = data ?? [];
-
-  if (budgets.length === 0) {
-    return (
-      <Box p={2} textAlign="center">
-        <Typography variant="h5">No budgets found</Typography>
-      </Box>
-    );
-  }
 
   return (
     <Box p={2} justifyContent="center" alignItems="center" width="100vw">
@@ -63,7 +59,7 @@ export default function BudgetChartsPage() {
           const percent = b.amount > 0 ? Math.min(100, Math.round((b.spent / b.amount) * 100)) : 0;
           const color = b.category?.color ?? theme.palette.primary.main;
           return (
-            <Card key={b.budgetId}>
+            <Card key={b.budgetId} onClick={() => openDetails(b.budgetId)} sx={{ cursor: 'pointer' }}>
               <CardContent sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                   <Box sx={{ width: 80, height: 80, position: 'relative' }}>
                     <ResponsiveContainer width="100%" height="100%">
@@ -103,10 +99,10 @@ export default function BudgetChartsPage() {
                     )}
                   </Box>
                     <Box display={'flex'} justifyContent={'flex-end'}>
-                      <IconButton color="primary" onClick={() => openEdit(b)} aria-label={`edit-${b.budgetId}`}>
+                      <IconButton color="primary" onClick={(e) => { e.stopPropagation(); openEdit(b); }} aria-label={`edit-${b.budgetId}`}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton color="error" onClick={() => openConfirm(b.budgetId)} aria-label={`delete-${b.budgetId}`}>
+                      <IconButton color="error" onClick={(e) => { e.stopPropagation(); openConfirm(b.budgetId); }} aria-label={`delete-${b.budgetId}`}>
                         <DeleteIcon />
                       </IconButton>
                     </Box>
@@ -137,6 +133,7 @@ export default function BudgetChartsPage() {
           />
         </DialogContent>
       </Dialog>
+  <BudgetDetails open={detailsOpen} onClose={() => { setDetailsOpen(false); setDetailsBudgetId(null); }} budgetId={detailsBudgetId} />
       <Dialog open={confirmOpen} onClose={closeConfirm}>
         <DialogTitle>Delete budget?</DialogTitle>
         <DialogContent>

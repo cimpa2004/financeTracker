@@ -190,7 +190,7 @@ export default function AddBudgetForm({ onSuccess, budgetId = null, initialValue
 											<MenuItem value="">
 												<em>All categories</em>
 											</MenuItem>
-											{categories.map((c) => (
+											{categories.filter(c => c.type === 'expense').map((c) => (
 												<MenuItem key={c.categoryId} value={c.categoryId}>
 													{c.name}
 												</MenuItem>

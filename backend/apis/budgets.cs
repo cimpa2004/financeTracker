@@ -33,6 +33,10 @@ public static class BudgetsApi
       .RequireAuthorization()
       .WithName("GetBudgetStatus");
 
+    app.MapGet("/api/budgets/{id}/transactions", GetBudgetTransactions)
+      .RequireAuthorization()
+      .WithName("GetBudgetTransactions");
+
     app.MapGet("/api/budgets/status", GetAllBudgetsStatus)
       .RequireAuthorization()
       .WithName("GetAllBudgetsStatus");
@@ -238,23 +242,33 @@ public static class BudgetsApi
     if (budget == null)
       return Results.NotFound(new { error = BudgetNotFoundMessage });
 
-    var start = budget.StartDate ?? DateTime.MinValue;
-    var end = budget.EndDate ?? DateTime.MaxValue;
-
-    var transactions = await db.Transactions
-      .Include(t => t.Category)
+    // Build transaction query safely (don't inject DateTime.MinValue/MaxValue into SQL)
+    var txQuery = db.Transactions
       .Where(t => t.UserId == userId)
-      .ToListAsync();
+      .Include(t => t.Category)
+      .AsQueryable();
 
-    DateTime GetTxDate(Transaction t) => t.Date ?? t.CreatedAt ?? DateTime.MinValue;
+    if (budget.CategoryId != null)
+    {
+      var catId = budget.CategoryId.Value;
+      txQuery = txQuery.Where(t => t.CategoryId == catId);
+    }
 
-    var relevant = transactions.Where(t =>
-      (budget.CategoryId == null || t.CategoryId == budget.CategoryId)
-      && GetTxDate(t) >= start
-      && GetTxDate(t) <= end
-    );
+    if (budget.StartDate.HasValue)
+    {
+      var s = budget.StartDate.Value;
+      txQuery = txQuery.Where(t => (t.Date ?? t.CreatedAt) >= s);
+    }
 
-    var spent = relevant
+    if (budget.EndDate.HasValue)
+    {
+      var e = budget.EndDate.Value;
+      txQuery = txQuery.Where(t => (t.Date ?? t.CreatedAt) <= e);
+    }
+
+    var transactions = await txQuery.ToListAsync();
+
+    var spent = transactions
       .Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
       .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
 
@@ -280,6 +294,61 @@ public static class BudgetsApi
     };
 
     return Results.Ok(resp);
+  }
+
+  private static async Task<IResult> GetBudgetTransactions(Guid id, FinancetrackerContext db, HttpContext http)
+  {
+    if (!http.TryGetUserId(out var userId))
+      return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
+
+    var budget = await db.Budgets.FirstOrDefaultAsync(b => b.BudgetId == id && b.UserId == userId);
+    if (budget == null)
+      return Results.NotFound(new { error = BudgetNotFoundMessage });
+
+    // Build query without injecting DateTime.MinValue/MaxValue into SQL-translated expressions
+    var txQuery = db.Transactions
+      .Where(t => t.UserId == userId)
+      .Include(t => t.Category)
+      .AsQueryable();
+
+    // Filter by category if budget has one
+    if (budget.CategoryId != null)
+    {
+      var catId = budget.CategoryId.Value;
+      txQuery = txQuery.Where(t => t.CategoryId == catId);
+    }
+
+    // Filter by start/end only when provided to avoid translating DateTime.MinValue/MaxValue to SQL
+    if (budget.StartDate.HasValue)
+    {
+      var s = budget.StartDate.Value;
+      txQuery = txQuery.Where(t => (t.Date ?? t.CreatedAt) >= s);
+    }
+
+    if (budget.EndDate.HasValue)
+    {
+      var e = budget.EndDate.Value;
+      txQuery = txQuery.Where(t => (t.Date ?? t.CreatedAt) <= e);
+    }
+
+    var transactions = await txQuery
+      .OrderByDescending(t => t.Date)
+      .ThenByDescending(t => t.CreatedAt)
+      .Select(t => new
+      {
+        t.TransactionId,
+        Amount = t.Amount,
+        Description = t.Description,
+        Name = t.Name,
+        Date = t.Date,
+        CreatedAt = t.CreatedAt,
+        Category = t.Category == null ? null : new { t.Category.CategoryId, t.Category.Name, t.Category.Icon, t.Category.Color, t.Category.Type },
+        User = db.Users.Where(u => u.UserId == t.UserId).Select(u => new { u.UserId, u.Username, u.Email }).FirstOrDefault(),
+        Subscription = t.SubscriptionId == null ? null : db.Subscriptions.Where(s => s.SubscriptionId == t.SubscriptionId).Select(s => new { s.SubscriptionId, s.Name, s.Amount, s.Interval, s.PaymentDate, s.IsActive }).FirstOrDefault()
+      }).Where(t => t.Category.Type == "expense")
+      .ToListAsync();
+
+    return Results.Ok(transactions);
   }
 
   private static async Task<IResult> GetAllBudgetsStatus(FinancetrackerContext db, HttpContext http)
