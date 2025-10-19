@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import SpentByCategoryCard from "../components/SpentByCategoryCard";
+import SpentByIntervalCard from "../components/SpentByIntervalCard";
 
 export default function StatisticsPage() {
   return (
@@ -10,6 +11,7 @@ export default function StatisticsPage() {
         gap={2}
       >
         <SpentByCategoryCard />
+        <SpentByIntervalCard />
       </Box>
 
     </Box>

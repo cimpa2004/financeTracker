@@ -13,4 +13,13 @@ export const spentByCategoryResponseSchema = z.object({
   byCategory: spentByCategoryResponseSchemabodyArray,
 });
 
+const spentByIntervalItem = z.object({
+  periodStart: z.string(),
+  spent: z.number(),
+});
+
+export const spentByIntervalResponseSchema = z.object({
+  byPeriod: z.array(spentByIntervalItem),
+});
+
 export type Interval = 'Daily' | 'Weekly' | 'Monthly' | 'Yearly' | 'AllTime';
