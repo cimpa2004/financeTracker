@@ -23,6 +23,7 @@ const PAGES: PageDef[] = [
   { name: 'Add Category', route: ROUTES.ADD_CATEGORY, icon: <CategoryIcon /> },
   { name: 'Budget Charts', route: ROUTES.BUDGET_CHARTS, icon: <PieChartIcon /> },
   { name: 'Add Budget', route: ROUTES.ADD_BUDGET, icon: <PieChartIcon /> },
+  { name: 'Statistics', route: ROUTES.STATISTICS, icon: <PieChartIcon /> },
 ];
 
 interface NavDrawerContentProps {
