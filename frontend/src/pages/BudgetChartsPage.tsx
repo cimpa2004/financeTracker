@@ -70,7 +70,7 @@ export default function BudgetChartsPage() {
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
-                    {percent > 90 && (
+                    {percent >= 90 && (
                       <Box sx={{ position: 'absolute', top: 4, right: 4, width: 18, height: 18, borderRadius: '50%', bgcolor: theme.palette.error.main, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 'bold', pointerEvents: 'none' }}>
                         !
                       </Box>
