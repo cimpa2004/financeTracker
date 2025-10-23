@@ -29,6 +29,8 @@ public partial class FinancetrackerContext : DbContext
 
   public virtual DbSet<User> Users { get; set; }
 
+  public virtual DbSet<Notification> Notifications { get; set; }
+
   // added subscriptions table
   public virtual DbSet<Subscription> Subscriptions { get; set; }
 
@@ -211,6 +213,27 @@ public partial class FinancetrackerContext : DbContext
               .HasForeignKey(d => d.SubscriptionId)
               .OnDelete(DeleteBehavior.SetNull)
               .HasConstraintName("FK__transaction__subscr__...");
+    });
+
+    modelBuilder.Entity<Notification>(entity =>
+    {
+      entity.HasKey(e => e.NotificationId).HasName("PK__notification__notification_id");
+      entity.ToTable("notification");
+
+      entity.Property(e => e.NotificationId)
+                                                  .HasDefaultValueSql("(newsequentialid())")
+                                                  .HasColumnName("notification_id");
+
+      entity.Property(e => e.BudgetId).HasColumnName("budget_id");
+      entity.Property(e => e.Level).HasColumnName("level");
+      entity.Property(e => e.SentAt).HasColumnType("datetime").HasColumnName("sent_at");
+      entity.Property(e => e.TransactionId).HasColumnName("transaction_id");
+      entity.Property(e => e.PeriodStart).HasColumnType("datetime").HasColumnName("period_start");
+      entity.Property(e => e.PeriodEnd).HasColumnType("datetime").HasColumnName("period_end");
+
+      entity.HasOne<Budget>().WithMany()
+                          .HasForeignKey(d => d.BudgetId)
+                          .HasConstraintName("FK__notification__budget__...");
     });
 
     // new mapping for subscription
