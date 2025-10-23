@@ -6,9 +6,7 @@ namespace backend.apis;
 
 public static class TransactionsApi
 {
-  // SQL Server datetime safe bounds
-  private static readonly DateTime SqlServerMin = System.Data.SqlTypes.SqlDateTime.MinValue.Value;
-  private static readonly DateTime SqlServerMax = System.Data.SqlTypes.SqlDateTime.MaxValue.Value;
+  // SQL Server datetime safe bounds (moved to services when needed)
 
   private static readonly string UnauthorizedMessage = "Unauthorized";
   private static readonly string TransactionNotFoundMessage = "Transaction not found.";
@@ -82,7 +80,10 @@ public static class TransactionsApi
 
         // after saving, evaluate budgets for this user and send notifications via the email service
         var logger = loggerFactory.CreateLogger("TransactionsApi");
-        await MailjetEmailService.TryNotifyBudgetsForTransactionAsync(transaction, db, emailService, logger);
+        if (emailService != null)
+        {
+          await emailService.NotifyBudgetsForTransactionAsync(transaction, db, logger);
+        }
 
         // return nested objects instead of FK ids
         var created = await db.Transactions
@@ -266,7 +267,10 @@ public static class TransactionsApi
 
             // after update, evaluate budgets for this user and send notifications via the email service
             var logger = loggerFactory.CreateLogger("TransactionsApi");
-            await MailjetEmailService.TryNotifyBudgetsForTransactionAsync(transaction, db, emailService, logger);
+            if (emailService != null)
+            {
+              await emailService.NotifyBudgetsForTransactionAsync(transaction, db, logger);
+            }
 
             var response = new
             {

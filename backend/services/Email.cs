@@ -9,6 +9,7 @@ namespace backend.services
   public interface IEmailService
   {
     Task SendTemplatedEmailAsync(string to, string subjectTemplate, string htmlTemplate, IDictionary<string, object?> model);
+    Task NotifyBudgetsForTransactionAsync(Transaction tx, FinancetrackerContext db, Microsoft.Extensions.Logging.ILogger? logger);
   }
 
   public class MailjetEmailService : IEmailService
@@ -104,16 +105,13 @@ namespace backend.services
         _logger.LogWarning("Mailjet send failed for {To}: {Status} {Body}", to, res.StatusCode, respBody);
       }
     }
-    // Simple in-memory dedup to avoid duplicate notifications for the same budget level during app lifetime.
-    // Key = budgetId, value = highest level notified (0 = none, 90, 100)
-    private static readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, int> _sentNotifications = new();
-
-    public static async Task TryNotifyBudgetsForTransactionAsync(Transaction tx, FinancetrackerContext db, backend.services.IEmailService? emailService, Microsoft.Extensions.Logging.ILogger? logger)
+    public async Task NotifyBudgetsForTransactionAsync(Transaction tx, FinancetrackerContext db, Microsoft.Extensions.Logging.ILogger? logger)
     {
+      var log = logger ?? _logger;
       try
       {
-        if (emailService == null)
-          return; // no email configured or not injected
+        if (tx == null || db == null)
+          return;
 
         var userId = tx.UserId;
         if (userId == Guid.Empty)
@@ -123,8 +121,7 @@ namespace backend.services
         var budgets = await db.Budgets.Include(b => b.Category)
           .Where(b => b.UserId == userId && (b.CategoryId == null || b.CategoryId == tx.CategoryId))
           .ToListAsync();
-        logger?.LogDebug("Evaluating {Count} budgets for category {CategoryId} (including global) and user {UserId}", budgets.Count, tx.CategoryId, userId);
-        logger?.LogDebug("Found {Count} budgets to evaluate for user {UserId}", budgets.Count, userId);
+        log?.LogDebug("Evaluating {Count} budgets for category {CategoryId} (including global) and user {UserId}", budgets.Count, tx.CategoryId, userId);
 
         const string UnnamedLabel = "unnamed";
         foreach (var b in budgets)
@@ -134,11 +131,11 @@ namespace backend.services
 
           // gather relevant transactions
           var relevant = await db.Transactions.Include(t => t.Category)
-        .Where(t => t.UserId == userId
-          && (b.CategoryId == null || t.CategoryId == b.CategoryId)
-          && ((t.Date ?? t.CreatedAt ?? SqlServerMin) >= start)
-          && ((t.Date ?? t.CreatedAt ?? SqlServerMin) <= end))
-              .ToListAsync();
+            .Where(t => t.UserId == userId
+              && (b.CategoryId == null || t.CategoryId == b.CategoryId)
+              && ((t.Date ?? t.CreatedAt ?? SqlServerMin) >= start)
+              && ((t.Date ?? t.CreatedAt ?? SqlServerMin) <= end))
+            .ToListAsync();
 
           var spent = relevant
             .Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
@@ -150,7 +147,7 @@ namespace backend.services
             .Where(t => t.Amount < 0m || (t.Category != null && string.Equals(t.Category.Type, "expense", StringComparison.OrdinalIgnoreCase)))
             .Sum(t => t.Amount < 0m ? -t.Amount : t.Amount);
 
-          logger?.LogDebug("Budget {BudgetId} evaluation: spent={Spent} amount={Amount}", b.BudgetId, spent, b.Amount);
+          log?.LogDebug("Budget {BudgetId} evaluation: spent={Spent} amount={Amount}", b.BudgetId, spent, b.Amount);
 
           if (b.Amount <= 0)
             continue;
@@ -158,69 +155,92 @@ namespace backend.services
           var percent = (int)Math.Floor((spent / b.Amount) * 100);
           var percentBefore = (int)Math.Floor((spentBefore / b.Amount) * 100);
 
-          // check thresholds 90 and 100
-          var highestSent = _sentNotifications.GetValueOrDefault(b.BudgetId, 0);
-
-          // Only send 90% notification if we haven't already hit 100% in this transaction
-          if (percent >= 90 && percent < 100 && percentBefore < 90 && highestSent < 90)
+          // Remove stale notifications for this budget if budget period changed
+          var stale = await db.Notifications.Where(n => n.BudgetId == b.BudgetId && (n.PeriodStart != b.StartDate || n.PeriodEnd != b.EndDate)).ToListAsync();
+          if (stale.Count > 0)
           {
-            // send 90% notification
-            var user = await db.Users.Where(u => u.UserId == b.UserId).FirstOrDefaultAsync();
-            if (user != null && !string.IsNullOrWhiteSpace(user.Email))
-            {
-              var subjectTemplate = "Budget '{{BudgetName}}' is {{Percent}}% used";
-              var htmlTemplate = "<p>Hi,</p><p>Your budget '<strong>{{BudgetName}}</strong>' has used <strong>{{Percent}}%</strong> of its allocated amount ({{Spent}} of {{Amount}}).</p><p>Regards,<br/>Trackaroo team</p>";
-              var model = new Dictionary<string, object?>
-              {
-                ["BudgetName"] = b.Name ?? UnnamedLabel,
-                ["Percent"] = percent,
-                ["Spent"] = (long)Math.Round(spent),
-                ["Amount"] = (long)Math.Round(b.Amount)
-              };
-              try
-              {
-                await emailService.SendTemplatedEmailAsync(user.Email, subjectTemplate, htmlTemplate, model);
-                logger?.LogInformation("Sent 90% email for budget {BudgetId} to {Email}", b.BudgetId, user.Email);
-              }
-              catch (Exception ex)
-              {
-                logger?.LogWarning(ex, "Failed to send 90% email for budget {BudgetId} to {Email}", b.BudgetId, user.Email);
-              }
-            }
-            _sentNotifications.AddOrUpdate(b.BudgetId, 90, (_, __) => 90);
+            db.Notifications.RemoveRange(stale);
+            await db.SaveChangesAsync();
+            log?.LogDebug("Removed {Count} stale notification(s) for budget {BudgetId}", stale.Count, b.BudgetId);
           }
 
-          if (percent >= 100 && percentBefore < 100 && highestSent < 100)
+          // check thresholds 90 and 100 (persistent check prevents duplicate across restarts)
+          if (percent >= 90 && percent < 100 && percentBefore < 90)
           {
-            var user = await db.Users.Where(u => u.UserId == b.UserId).FirstOrDefaultAsync();
-            if (user != null && !string.IsNullOrWhiteSpace(user.Email))
+            var existing = await db.Notifications.AnyAsync(n => n.BudgetId == b.BudgetId && n.Level == 90 && n.PeriodStart == b.StartDate && n.PeriodEnd == b.EndDate);
+            if (!existing)
             {
-              var subjectTemplate = "Budget '{{BudgetName}}' reached 100%";
-              var htmlTemplate = "<p>Hi,</p><p>Your budget '<strong>{{BudgetName}}</strong>' has reached or exceeded its allocated amount. Spent: {{Spent}} of {{Amount}}.</p><p>Regards,<br/>Trackaroo team</p>";
-              var model = new Dictionary<string, object?>
+              var user = await db.Users.Where(u => u.UserId == b.UserId).FirstOrDefaultAsync();
+              if (user != null && !string.IsNullOrWhiteSpace(user.Email))
               {
-                ["BudgetName"] = b.Name ?? UnnamedLabel,
-                ["Percent"] = percent,
-                ["Spent"] = (long)Math.Round(spent),
-                ["Amount"] = (long)Math.Round(b.Amount)
-              };
-              try
-              {
-                await emailService.SendTemplatedEmailAsync(user.Email, subjectTemplate, htmlTemplate, model);
-                logger?.LogInformation("Sent 100% email for budget {BudgetId} to {Email}", b.BudgetId, user.Email);
-              }
-              catch (Exception ex)
-              {
-                logger?.LogWarning(ex, "Failed to send 100% email for budget {BudgetId} to {Email}", b.BudgetId, user.Email);
+                var subjectTemplate = "Budget '{{BudgetName}}' is {{Percent}}% used";
+                var htmlTemplate = "<p>Hi,</p><p>Your budget '<strong>{{BudgetName}}</strong>' has used <strong>{{Percent}}%</strong> of its allocated amount ({{Spent}} of {{Amount}}).</p><p>Regards,<br/>Trackaroo team</p>";
+                var model = new Dictionary<string, object?>
+                {
+                  ["BudgetName"] = b.Name ?? UnnamedLabel,
+                  ["Percent"] = percent,
+                  ["Spent"] = (long)Math.Round(spent),
+                  ["Amount"] = (long)Math.Round(b.Amount)
+                };
+                try
+                {
+                  await SendTemplatedEmailAsync(user.Email, subjectTemplate, htmlTemplate, model);
+                  db.Notifications.Add(new Notification { BudgetId = b.BudgetId, Level = 90, SentAt = DateTime.UtcNow, TransactionId = tx.TransactionId, PeriodStart = b.StartDate, PeriodEnd = b.EndDate });
+                  await db.SaveChangesAsync();
+                  log?.LogInformation("Sent 90% email for budget {BudgetId} to {Email}", b.BudgetId, user.Email);
+                }
+                catch (Exception ex)
+                {
+                  log?.LogWarning(ex, "Failed to send 90% email for budget {BudgetId} to {Email}", b.BudgetId, user.Email);
+                }
               }
             }
-            _sentNotifications.AddOrUpdate(b.BudgetId, 100, (_, __) => 100);
+            else
+            {
+              log?.LogDebug("Skipping 90% email for budget {BudgetId} as persistent record exists", b.BudgetId);
+            }
+          }
+
+          if (percent >= 100 && percentBefore < 100)
+          {
+            var existing = await db.Notifications.AnyAsync(n => n.BudgetId == b.BudgetId && n.Level == 100 && n.PeriodStart == b.StartDate && n.PeriodEnd == b.EndDate);
+            if (!existing)
+            {
+              var user = await db.Users.Where(u => u.UserId == b.UserId).FirstOrDefaultAsync();
+              if (user != null && !string.IsNullOrWhiteSpace(user.Email))
+              {
+                var subjectTemplate = "Budget '{{BudgetName}}' reached 100%";
+                var htmlTemplate = "<p>Hi,</p><p>Your budget '<strong>{{BudgetName}}</strong>' has reached or exceeded its allocated amount. Spent: {{Spent}} of {{Amount}}.</p><p>Regards,<br/>Trackaroo team</p>";
+                var model = new Dictionary<string, object?>
+                {
+                  ["BudgetName"] = b.Name ?? UnnamedLabel,
+                  ["Percent"] = percent,
+                  ["Spent"] = (long)Math.Round(spent),
+                  ["Amount"] = (long)Math.Round(b.Amount)
+                };
+                try
+                {
+                  await SendTemplatedEmailAsync(user.Email, subjectTemplate, htmlTemplate, model);
+                  db.Notifications.Add(new Notification { BudgetId = b.BudgetId, Level = 100, SentAt = DateTime.UtcNow, TransactionId = tx.TransactionId, PeriodStart = b.StartDate, PeriodEnd = b.EndDate });
+                  await db.SaveChangesAsync();
+                  log?.LogInformation("Sent 100% email for budget {BudgetId} to {Email}", b.BudgetId, user.Email);
+                }
+                catch (Exception ex)
+                {
+                  log?.LogWarning(ex, "Failed to send 100% email for budget {BudgetId} to {Email}", b.BudgetId, user.Email);
+                }
+              }
+            }
+            else
+            {
+              log?.LogDebug("Skipping 100% email for budget {BudgetId} as persistent record exists", b.BudgetId);
+            }
           }
         }
       }
       catch (Exception ex)
       {
-        logger?.LogError(ex, "Error while evaluating budgets for notifications.");
+        _logger.LogError(ex, "Error while evaluating budgets for notifications.");
       }
     }
   }
