@@ -1,5 +1,7 @@
 using backend.apis;
-using System.IO;
+using System.Reflection;
+using System.Linq;
+using QuestPDF;
 using backend.Models;
 using backend.services;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +44,9 @@ builder.Services.AddSingleton<JwtService>();
 // register Mailjet email service. Configure Email:Mailjet:ApiKey, Email:Mailjet:ApiSecret and Email:From
 builder.Services.AddHttpClient("mailjet");
 builder.Services.AddSingleton<backend.services.IEmailService, backend.services.MailjetEmailService>();
+
+// register report service
+builder.Services.AddScoped<backend.services.ReportService>();
 
 // -- ADD: configure JWT authentication --
 // ensure you have a secret in configuration: "Jwt:Key"
@@ -93,6 +98,38 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Configure QuestPDF license (set to Community) using reflection so this works across QuestPDF versions.
+try
+{
+  var settingsType = Type.GetType("QuestPDF.Settings, QuestPDF") ?? (typeof(object).Assembly.GetType("QuestPDF.Settings") ?? typeof(object));
+  if (settingsType != null && settingsType.FullName == "QuestPDF.Settings")
+  {
+    var asm = settingsType.Assembly;
+    var enumType = asm.GetTypes().FirstOrDefault(t => t.IsEnum && t.GetFields(BindingFlags.Public | BindingFlags.Static).Any(f => f.Name == "Community"));
+    if (enumType != null)
+    {
+      var community = Enum.Parse(enumType, "Community");
+      var licenseProp = settingsType.GetProperty("License", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+      if (licenseProp != null && licenseProp.PropertyType == enumType)
+      {
+        licenseProp.SetValue(null, community);
+      }
+      else
+      {
+        var licenseField = settingsType.GetField("License", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        if (licenseField != null && licenseField.FieldType == enumType)
+        {
+          licenseField.SetValue(null, community);
+        }
+      }
+    }
+  }
+}
+catch
+{
+  // If we can't set the license here, the QuestPDF library will raise a clear exception at PDF generation time.
+}
+
 app.MapGet("/", () => "OK");
 app.MapRegister();
 app.MapLogin();
@@ -105,5 +142,6 @@ app.MapBudgets();
 app.MapStatistics();
 
 app.MapSpentThisMonth();
+app.MapReports();
 
 await app.RunAsync();

@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+//import { lazy } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import HealthCheck from './apis/HealthCheck';
@@ -17,6 +17,7 @@ import WelcomePage from './pages/WelcomePage';
 import BudgetChartsPage from './pages/BudgetChartsPage';
 import AddBudgetPage from './pages/AddBudgetPage';
 import StatisticsPage from './pages/StatisticsPage';
+import ReportsPage from './pages/ReportsPage';
 
 const router = createBrowserRouter([
   {
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
               {
                 path: ROUTES.STATISTICS,
                 element: <StatisticsPage />,
+              },
+              {
+                path: ROUTES.REPORTS,
+                element: <ReportsPage />,
               }
             ],
         },
@@ -71,11 +76,11 @@ const router = createBrowserRouter([
   },
 ]);
 
-const ReactQueryDevtools = lazy(() =>
-  import('@tanstack/react-query-devtools').then((module) => ({
-    default: module.ReactQueryDevtools,
-  }))
-);
+// const ReactQueryDevtools = lazy(() =>
+//   import('@tanstack/react-query-devtools').then((module) => ({
+//     default: module.ReactQueryDevtools,
+//   }))
+// );
 
 function App() {
   const querryClient = new QueryClient();
