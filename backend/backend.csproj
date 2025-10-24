@@ -19,6 +19,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
+  <PackageReference Include="QuestPDF" Version="2022.12.0" />
   </ItemGroup>
 
 </Project>

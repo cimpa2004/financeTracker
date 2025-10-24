@@ -155,6 +155,25 @@ class HttpService {
   ): Promise<z.infer<Z>> {
     return this.request(url, schema, this.createBodyRequestOptions('PUT', body), context);
   }
+
+  async download(path: string, options?: RequestInit, context?: { operation?: string }): Promise<Blob> {
+    options = options ?? { method: 'GET' };
+    const fullUrl = path.startsWith('http') ? path : `${this.baseUrl}${path}`;
+    try {
+      const resp = await this.executeRequest(fullUrl, options);
+      if (!resp.ok) {
+        const txt = await resp.text().catch(() => '');
+        const err = new Error(`${resp.status} ${resp.statusText} ${txt}`);
+        notifyError(err, context);
+        throw err;
+      }
+      const blob = await resp.blob();
+      return blob;
+    } catch (error) {
+      notifyError(error, context);
+      throw error;
+    }
+  }
 }
 
 export const httpService = new HttpService();

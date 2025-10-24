@@ -9,4 +9,5 @@ export const ROUTES = {
   BUDGET_CHARTS: '/budget-charts',
   ADD_BUDGET: '/add-budget',
   STATISTICS: '/statistics',
+  REPORTS: '/reports',
 }
