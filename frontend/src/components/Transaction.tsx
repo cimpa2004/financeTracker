@@ -8,6 +8,9 @@ export interface TransactionProps {
 }
 
 export default function Transaction({ Transaction, onClick }: TransactionProps) {
+    const amountNumber = Number(Transaction.amount ?? 0);
+    const formatted = new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(amountNumber);
+
     return (
         <Paper
             elevation={2}
@@ -29,7 +32,7 @@ export default function Transaction({ Transaction, onClick }: TransactionProps) 
         />
             <Box flexGrow={1} display="flex" flexDirection="row" justifyContent="space-between" alignItems="center" marginLeft={1}>
                 <Box fontWeight="bold">{Transaction.name}</Box>
-                <Box color="text.secondary">${Transaction.amount.toFixed(2)}</Box>
+                <Box color="text.secondary">{formatted}</Box>
             </Box>
         </Paper>
     );
