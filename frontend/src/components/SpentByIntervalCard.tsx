@@ -105,7 +105,7 @@ export default function SpentByIntervalCard() {
             <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="x" tickFormatter={formatX} stroke={theme.palette.text.secondary} />
-              <YAxis tickFormatter={(v) => new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(Number(v))} stroke={theme.palette.text.secondary} />
+              <YAxis width={80} tickMargin={8} tickFormatter={(v) => new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(Number(v))} stroke={theme.palette.text.secondary} />
               <Tooltip content={<ChartTooltip />} />
               <Line type="monotone" dataKey="y" stroke={theme.palette.primary.main} strokeWidth={2} dot={{ r: 2 }} />
             </LineChart>
