@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ElementType } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme } from '@mui/material/styles';
@@ -23,6 +24,7 @@ import { TransactionFormSchema, type TransactionFormInput } from '../types/Trans
 import { useCategories } from '../apis/Category';
 import { useAddTransaction } from '../apis/Transaction';
 import { useAuth } from '../contexts/AuthContext';
+import ThemedScrollbar from './ThemedScrollbar';
 
 type Props = {
   submitLabel?: string;
@@ -166,15 +168,24 @@ export default function TransactionForm({ submitLabel = 'Add Transaction', defau
             render={({ field }) => (
               <FormControl fullWidth error={!!errors.categoryId}>
                 <InputLabel id="category-label">Category*</InputLabel>
-                <Select {...field} labelId="category-label" label="Category*">
+                <Select
+                  {...field}
+                  labelId="category-label"
+                  label="Category*"
+                  MenuProps={{
+                    PaperProps: { component: ThemedScrollbar as ElementType },
+                  }}
+                >
+                  <ThemedScrollbar>
                   <MenuItem value="">
                     <em>Select a category</em>
                   </MenuItem>
                   {categories.map((category) => (
                     <MenuItem key={category.categoryId} value={category.categoryId}>
-                      {category.name}
+                      {category.type} - {category.name}
                     </MenuItem>
                   ))}
+                  </ThemedScrollbar>
                 </Select>
                 {errors.categoryId && <FormHelperText>{errors.categoryId.message}</FormHelperText>}
               </FormControl>
