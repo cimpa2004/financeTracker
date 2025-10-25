@@ -63,7 +63,7 @@ export default function SpentByIntervalCard() {
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 2 }}>
+    <Paper elevation={2} sx={{ p: 2, width: '100%', boxSizing: 'border-box', maxWidth: '100%' }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <Typography variant="h6">Spending over time</Typography>
         <Box display="flex" gap={1} alignItems="center">
@@ -76,20 +76,22 @@ export default function SpentByIntervalCard() {
         </Box>
       </Box>
 
-        <Box display="flex" gap={2} mb={2} alignItems="center">
+      <Box display={{ xs: 'block', sm: 'flex' }} gap={2} mb={2} alignItems="center">
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            label="Start date"
-            value={startDate ? new Date(startDate) : null}
-            onChange={(d) => setStartDate(d ? d.toISOString().slice(0, 10) : undefined)}
-            slotProps={{ textField: { size: "small" } }}
-          />
-          <DatePicker
-            label="End date"
-            value={endDate ? new Date(endDate) : null}
-            onChange={(d) => setEndDate(d ? d.toISOString().slice(0, 10) : undefined)}
-            slotProps={{ textField: { size: "small" } }}
-          />
+          <Box sx={{ display: 'flex', gap: 2, width: '100%', flexWrap: 'wrap' }}>
+            <DatePicker
+              label="Start date"
+              value={startDate ? new Date(startDate) : null}
+              onChange={(d) => setStartDate(d ? d.toISOString().slice(0, 10) : undefined)}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
+            />
+            <DatePicker
+              label="End date"
+              value={endDate ? new Date(endDate) : null}
+              onChange={(d) => setEndDate(d ? d.toISOString().slice(0, 10) : undefined)}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
+            />
+          </Box>
         </LocalizationProvider>
       </Box>
 
