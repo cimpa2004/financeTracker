@@ -33,6 +33,7 @@ export default function TranOrSubContainer({
     setOpenTransactionDetail(true);
   }, []);
 
+
     return (
         <Paper elevation={1} sx={{ padding: 1, marginBottom: 2, width: "100%" }}>
             {firstItems.map((item) =>
@@ -69,12 +70,13 @@ export default function TranOrSubContainer({
             <Dialog open={openTransactionDetail} onClose={() => setOpenTransactionDetail(false)} fullWidth maxWidth="sm">
                 <DialogTitle>Transaction Details</DialogTitle>
                 <DialogContent>
-                    <TransactionDetails transaction={selectedTransaction!} onClose={()=>setOpenTransactionDetail(false)} />
+                  <TransactionDetails transaction={selectedTransaction!} onClose={()=>setOpenTransactionDetail(false)} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenTransactionDetail(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
+
       </Paper>
     );
 }

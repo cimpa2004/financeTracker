@@ -46,6 +46,22 @@ export function useAddTransaction() {
     });
 }
 
+async function updateTransaction(id: string, payload: TransactionFormInput) {
+    const response = await httpService.put(`transactions/${id}`, TransactionSchema, payload);
+    return response;
+}
+
+export function useUpdateTransaction() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: string; payload: TransactionFormInput }) => updateTransaction(id, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["transactions", "last3"] });
+        },
+    });
+}
+
 async function deleteTransaction(transactionId: string) {
   await httpService.delete(`transactions/${transactionId}`, z.string());
 }

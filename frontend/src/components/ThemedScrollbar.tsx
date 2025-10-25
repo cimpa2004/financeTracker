@@ -1,9 +1,9 @@
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
+import type { BoxProps } from '@mui/material/Box';
+import React from 'react';
 
-// A wrapper that applies a themed scrollbar. Works on WebKit and Firefox.
-const ThemedScrollbar = styled(Box)(({ theme }) => ({
-  maxHeight: 220,
+const Root = styled(Box)(({ theme }) => ({
   overflowY: 'auto',
   paddingRight: 8,
   /* WebKit */
@@ -24,5 +24,23 @@ const ThemedScrollbar = styled(Box)(({ theme }) => ({
   scrollbarWidth: 'thin',
   scrollbarColor: `${theme.palette.action.selected} ${theme.palette.background.paper}`,
 }));
+
+type ThemedScrollbarProps = BoxProps & {
+  fullVh?: boolean;
+};
+
+const ThemedScrollbar: React.FC<ThemedScrollbarProps> = ({ fullVh = false, sx, children, ...rest }) => {
+  const sizeStyle: BoxProps['sx'] = fullVh
+    ? { height: '100vh', maxHeight: '100vh' }
+    : { maxHeight: 220 };
+
+  const mergedSx = Array.isArray(sx) ? [...sx, sizeStyle] : { ...(sx as object), ...sizeStyle };
+
+  return (
+    <Root sx={mergedSx} {...(rest as BoxProps)}>
+      {children}
+    </Root>
+  );
+};
 
 export default ThemedScrollbar;
