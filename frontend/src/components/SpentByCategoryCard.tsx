@@ -25,7 +25,11 @@ function CustomTooltip({ active, payload, label, total, currency }: { active?: b
   );
 }
 
-export default function SpentByCategoryCard() {
+interface SpentByCategoryCardProps {
+  width?: string | number;
+}
+
+export default function SpentByCategoryCard({ width = 'auto' }: SpentByCategoryCardProps) {
   const [interval, setInterval] = useState<Interval>("AllTime");
   const { data, isLoading, isError } = useGetSpentByCategory(interval);
   const theme = useTheme();
@@ -60,7 +64,7 @@ export default function SpentByCategoryCard() {
 
 
   return (
-    <Paper elevation={2} sx={{ p: 2 }}>
+    <Paper elevation={2} sx={{ p: 2, width: { width } }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <Typography variant="h6">Spendings by category</Typography>
         <Select size="small" value={interval} onChange={(e) => setInterval(e.target.value as Interval)}>

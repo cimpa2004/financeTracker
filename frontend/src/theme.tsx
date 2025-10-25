@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createTheme, CssBaseline, ThemeProvider as MUIThemeProvider } from '@mui/material';
 import type { PaletteMode } from '@mui/material';
-import { ColorModeContext } from './colorModeContext';
+import { ColorModeContext } from './contexts/colorModeContext';
 
 function getDesignTokens(mode: PaletteMode) {
   return {

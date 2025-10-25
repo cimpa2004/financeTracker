@@ -4,14 +4,14 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { useState } from "react";
 import NavDrawerContent from "./NavDrawerContent";
-import { useColorMode } from '../../colorModeContext';
+import { useColorMode } from '../../contexts/colorModeContext';
 
 export default function Navbar() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const closeDrawer = () => setIsDrawerOpen(false);
     return (
         <Box>
-            <AppBar position="static">
+            <AppBar position="sticky">
                 <Toolbar sx={{ justifyContent: "space-between" }}>
                     <Box display="flex" alignItems="center">
                       <IconButton

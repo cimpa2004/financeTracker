@@ -6,7 +6,7 @@ export const AppLayout = () => {
   return (
     <Box display="flex" height={'100vh'} flexDirection="column">
       <Navbar />
-      <Box component="main" flexGrow={1} display="flex">
+      <Box component="main" flexGrow={1} display="flex" sx={{ overflow: 'auto' }}>
         <Outlet />
       </Box>
     </Box>
