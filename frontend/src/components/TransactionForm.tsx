@@ -16,6 +16,8 @@ import {
   Alert,
   useMediaQuery,
 } from '@mui/material';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 import { TransactionFormSchema, type TransactionFormInput } from '../types/Transaction';
 import { useCategories } from '../apis/Category';
@@ -146,7 +148,14 @@ export default function TransactionForm({ submitLabel = 'Add Transaction', defau
               name="date"
               control={control}
               render={({ field }) => (
-                <TextField {...field} label="Date" type="date" fullWidth error={!!errors.date} helperText={errors.date?.message} />
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <DatePicker
+                    label="Date"
+                    value={field.value ? new Date(field.value) : null}
+                    onChange={(d: Date | null) => field.onChange(d ? d.toISOString().slice(0, 10) : '')}
+                    slotProps={{ textField: { fullWidth: true, error: !!errors.date, helperText: errors.date?.message } }}
+                  />
+                </LocalizationProvider>
               )}
             />
           </Box>

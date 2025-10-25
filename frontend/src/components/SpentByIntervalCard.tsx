@@ -1,5 +1,7 @@
-import { useMemo, useState, useEffect } from 'react';
-import { Box, Paper, Typography, Select, MenuItem, TextField } from '@mui/material';
+import { useMemo, useState } from 'react';
+import { Box, Paper, Typography, Select, MenuItem } from '@mui/material';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useTheme } from '@mui/material/styles';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import type { Interval } from '../types/Statistics';
@@ -23,38 +25,10 @@ export default function SpentByIntervalCard() {
   const [interval, setInterval] = useState<Interval>('Monthly');
   const [startDate, setStartDate] = useState<string | undefined>(undefined);
   const [endDate, setEndDate] = useState<string | undefined>(undefined);
-  const [startRaw, setStartRaw] = useState<string>('');
-  const [endRaw, setEndRaw] = useState<string>('');
 
   // convert date (yyyy-mm-dd) to ISO UTC strings expected by backend
   const startIso = useMemo(() => (startDate ? `${startDate}T00:00:00Z` : undefined), [startDate]);
   const endIso = useMemo(() => (endDate ? `${endDate}T23:59:59Z` : undefined), [endDate]);
-
-  // parse display value like 'yyyy.mm.dd' or 'yyyy-mm-dd' into normalized 'yyyy-mm-dd'
-  const parseDisplayToIso = (val: string) => {
-    if (!val) return undefined;
-    const trimmed = val.trim();
-    if (/^\d{4}\.\d{2}\.\d{2}$/.test(trimmed)) return trimmed.replaceAll('.', '-');
-    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
-    return undefined;
-  };
-
-  const formatIsoToDisplay = (iso?: string) => {
-    if (!iso) return '';
-    // expect yyyy-mm-dd
-  const re = /^(\d{4})-(\d{2})-(\d{2})$/;
-  const m = re.exec(iso);
-  if (!m) return iso;
-  return `${m[1]}.${m[2]}.${m[3]}`;
-  };
-
-  useEffect(() => {
-    setStartRaw(formatIsoToDisplay(startDate));
-  }, [startDate]);
-
-  useEffect(() => {
-    setEndRaw(formatIsoToDisplay(endDate));
-  }, [endDate]);
 
   const { data, isLoading, isError } = useGetSpentByInterval(interval, startIso, endIso);
 
@@ -103,34 +77,20 @@ export default function SpentByIntervalCard() {
       </Box>
 
         <Box display="flex" gap={2} mb={2} alignItems="center">
-        <TextField
-          label="Start date"
-          type="text"
-          size="small"
-          placeholder="yyyy.mm.dd"
-          value={startRaw}
-          onChange={(e) => {
-            const v = e.target.value;
-            setStartRaw(v);
-            setStartDate(parseDisplayToIso(v));
-          }}
-          aria-label="start date"
-          slotProps={{ inputLabel: { shrink: true } }}
-        />
-        <TextField
-          label="End date"
-          type="text"
-          size="small"
-          placeholder="yyyy.mm.dd"
-          value={endRaw}
-          onChange={(e) => {
-            const v = e.target.value;
-            setEndRaw(v);
-            setEndDate(parseDisplayToIso(v));
-          }}
-          aria-label="end date"
-          slotProps={{ inputLabel: { shrink: true } }}
-        />
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <DatePicker
+            label="Start date"
+            value={startDate ? new Date(startDate) : null}
+            onChange={(d) => setStartDate(d ? d.toISOString().slice(0, 10) : undefined)}
+            slotProps={{ textField: { size: "small" } }}
+          />
+          <DatePicker
+            label="End date"
+            value={endDate ? new Date(endDate) : null}
+            onChange={(d) => setEndDate(d ? d.toISOString().slice(0, 10) : undefined)}
+            slotProps={{ textField: { size: "small" } }}
+          />
+        </LocalizationProvider>
       </Box>
 
       {(!chartData || chartData.length === 0) ? (
