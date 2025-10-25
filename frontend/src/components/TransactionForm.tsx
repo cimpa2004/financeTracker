@@ -1,0 +1,192 @@
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useTheme } from '@mui/material/styles';
+import {
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  FormHelperText,
+  Box,
+  Typography,
+  Stack,
+  Alert,
+  useMediaQuery,
+} from '@mui/material';
+
+import { TransactionFormSchema, type TransactionFormInput } from '../types/Transaction';
+import { useCategories } from '../apis/Category';
+import { useAddTransaction } from '../apis/Transaction';
+import { useAuth } from '../contexts/AuthContext';
+
+type Props = {
+  submitLabel?: string;
+  defaultValues?: Partial<TransactionFormInput>;
+};
+
+export default function TransactionForm({ submitLabel = 'Add Transaction', defaultValues = {} }: Props) {
+  const today = new Date().toISOString().slice(0, 10);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user } = useAuth();
+  const { data: categories = [] } = useCategories();
+  const { mutate: addTransaction, isPending, isError, error, isSuccess } = useAddTransaction();
+
+  const [showError, setShowError] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    if (isError) {
+      setShowError(true);
+      t = setTimeout(() => setShowError(false), 2000);
+    }
+    return () => {
+      if (t) clearTimeout(t);
+    };
+  }, [isError]);
+
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    if (isSuccess) {
+      setShowSuccess(true);
+      t = setTimeout(() => setShowSuccess(false), 2000);
+    }
+    return () => {
+      if (t) clearTimeout(t);
+    };
+  }, [isSuccess]);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<TransactionFormInput>({
+    resolver: zodResolver(TransactionFormSchema),
+    defaultValues: {
+      userId: defaultValues.userId ?? user?.userId ?? '',
+      amount: defaultValues.amount ?? '0',
+      name: defaultValues.name ?? '',
+      date: defaultValues.date ?? today,
+      categoryId: defaultValues.categoryId ?? '',
+      description: defaultValues.description ?? '',
+    },
+  });
+
+  const internalSubmit = (data: TransactionFormInput) => {
+    addTransaction(
+      { ...data, userId: user?.userId || '' },
+      {
+        onSuccess: () => {
+          reset({
+            userId: user?.userId || '',
+            amount: '0',
+            name: '',
+            date: defaultValues.date ?? today,
+            categoryId: '',
+            description: '',
+          });
+        },
+      }
+    );
+  };
+
+  return (
+    <Box sx={{ width: '100%', maxWidth: '600px', mx: 'auto', p: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        {submitLabel}
+      </Typography>
+
+      {showError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error?.message || 'An error occurred while adding the transaction'}
+        </Alert>
+      )}
+
+      {showSuccess && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          Transaction added successfully
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit(internalSubmit)} noValidate>
+        <Stack spacing={2}>
+          <Controller
+            name="name"
+            control={control}
+            render={({ field }) => (
+              <TextField {...field} label="Name*" fullWidth error={!!errors.name} helperText={errors.name?.message} />
+            )}
+          />
+
+          <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 2 }}>
+            <Controller
+              name="amount"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Amount*"
+                  type="text"
+                  fullWidth
+                  inputMode="decimal"
+                  value={field.value ?? ''}
+                  onChange={(e) => field.onChange(e.target.value)}
+                  error={!!errors.amount}
+                  helperText={errors.amount?.message}
+                />
+              )}
+            />
+
+            <Controller
+              name="date"
+              control={control}
+              render={({ field }) => (
+                <TextField {...field} label="Date" type="date" fullWidth error={!!errors.date} helperText={errors.date?.message} />
+              )}
+            />
+          </Box>
+
+          <Controller
+            name="categoryId"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth error={!!errors.categoryId}>
+                <InputLabel id="category-label">Category*</InputLabel>
+                <Select {...field} labelId="category-label" label="Category*">
+                  <MenuItem value="">
+                    <em>Select a category</em>
+                  </MenuItem>
+                  {categories.map((category) => (
+                    <MenuItem key={category.categoryId} value={category.categoryId}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.categoryId && <FormHelperText>{errors.categoryId.message}</FormHelperText>}
+              </FormControl>
+            )}
+          />
+
+          <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+              <TextField {...field} label="Description" multiline rows={3} fullWidth error={!!errors.description} helperText={errors.description?.message} />
+            )}
+          />
+
+          <Box sx={{ mt: 1 }}>
+            <Button type="submit" variant="contained" color="primary" fullWidth={isMobile} disabled={isPending || isSubmitting}>
+              {isPending || isSubmitting ? 'Submitting...' : submitLabel}
+            </Button>
+          </Box>
+        </Stack>
+      </form>
+    </Box>
+  );
+}

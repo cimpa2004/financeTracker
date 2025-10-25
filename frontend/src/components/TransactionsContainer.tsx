@@ -1,11 +1,10 @@
-import { Button, Paper, Stack } from "@mui/material";
+import { Button, Paper, Stack, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import React from "react";
+import TransactionForm from './TransactionForm';
 import type { Transaction as TransactionType } from "../types/Transaction";
 import Transaction from "./Transaction";
 import type { Subscription as SubscriptionType } from "../types/Subscription";
 import Subscription from "./Subsription";
-import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../constants";
 
 export interface TransactionsContainerProps {
     Transactions?: TransactionType[];
@@ -16,7 +15,7 @@ export default function TranOrSubContainer({
     Transactions = [],
     Subscriptions = [],
 }: TransactionsContainerProps) {
-    const navigate = useNavigate();
+    const [openCreate, setOpenCreate] = React.useState(false);
 
     const firstItems = React.useMemo<(TransactionType | SubscriptionType)[]>(
         () => [...Transactions, ...Subscriptions].slice(0, 3),
@@ -42,7 +41,7 @@ export default function TranOrSubContainer({
               {Transactions.length > 0 ? (
                 <>
                   <Button variant="outlined" color="primary">Show All</Button>
-                  <Button variant="contained" color="primary" onClick={() => navigate(ROUTES.ADD_TRANSACTION)}>Add New Transaction</Button>
+                  <Button variant="contained" color="primary" onClick={() => setOpenCreate(true)}>Add New Transaction</Button>
                 </>
               ) : (<>
                   <Button variant="outlined" color="primary">Show All</Button>
@@ -50,6 +49,15 @@ export default function TranOrSubContainer({
               </>
               )}
             </Stack>
+            <Dialog open={openCreate} onClose={() => setOpenCreate(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Add Transaction</DialogTitle>
+                <DialogContent>
+                    <TransactionForm />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenCreate(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
         </Paper>
     );
 }

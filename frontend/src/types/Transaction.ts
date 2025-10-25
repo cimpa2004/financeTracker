@@ -29,7 +29,7 @@ export type Transaction = z.infer<typeof TransactionSchema>;
 export type TransactionArray = z.infer<typeof TransactionArraySchema>;
 
 export const TransactionFormSchema = z.object({
-  categoryId: z.string({ message: "Valid category is required" }),
+  categoryId: z.string({ message: "Valid category is required" }).nonempty({ message: "Category is required" }),
   amount: z.string()
     .regex(/^\d+(\.\d+)?$/, { message: "Amount must contain only digits and an optional '.' decimal separator" })
     .refine(val => {
@@ -37,7 +37,7 @@ export const TransactionFormSchema = z.object({
       return !Number.isNaN(n) && n !== 0;
     }, { message: "Amount must be non-zero" }),
   description: z.string().max(1000, { message: "Description must be at most 1000 characters" }).nullable().optional(),
-  name: z.string().max(255, { message: "Name must be at most 255 characters" }),
+  name: z.string().max(255, { message: "Name must be at most 255 characters" }).nonempty({ message: "Name is required" }),
   date: z.string().transform(val => val ? val : new Date().toISOString().slice(0, 10)),
   subscriptionId: z.string({ message: "Invalid subscription" }).nullable().optional(),
   userId: z.string().optional(), // added since userId comes from context/props
