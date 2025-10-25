@@ -27,12 +27,13 @@ const Root = styled(Box)(({ theme }) => ({
 
 type ThemedScrollbarProps = BoxProps & {
   fullVh?: boolean;
+  maxHeight?: number | string;
 };
 
-const ThemedScrollbar: React.FC<ThemedScrollbarProps> = ({ fullVh = false, sx, children, ...rest }) => {
+const ThemedScrollbar: React.FC<ThemedScrollbarProps> = ({ fullVh = false, maxHeight = 220, sx, children, ...rest }) => {
   const sizeStyle: BoxProps['sx'] = fullVh
     ? { height: '100vh', maxHeight: '100vh' }
-    : { maxHeight: 220 };
+    : { maxHeight: maxHeight };
 
   const mergedSx = Array.isArray(sx) ? [...sx, sizeStyle] : { ...(sx as object), ...sizeStyle };
 
