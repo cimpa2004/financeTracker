@@ -1,10 +1,11 @@
 import { Button, Paper, Stack, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
-import React from "react";
+import React, { useCallback } from "react";
 import TransactionForm from './TransactionForm';
 import type { Transaction as TransactionType } from "../types/Transaction";
 import Transaction from "./Transaction";
 import type { Subscription as SubscriptionType } from "../types/Subscription";
 import Subscription from "./Subsription";
+import TransactionDetails from "./TransactionDetails";
 
 export interface TransactionsContainerProps {
     Transactions?: TransactionType[];
@@ -15,7 +16,9 @@ export default function TranOrSubContainer({
     Transactions = [],
     Subscriptions = [],
 }: TransactionsContainerProps) {
-    const [openCreate, setOpenCreate] = React.useState(false);
+  const [openCreate, setOpenCreate] = React.useState(false);
+  const [openTransactionDetail, setOpenTransactionDetail] = React.useState(false);
+  const [selectedTransaction, setSelectedTransaction] = React.useState<TransactionType | null>(null);
 
     const firstItems = React.useMemo<(TransactionType | SubscriptionType)[]>(
         () => [...Transactions, ...Subscriptions].slice(0, 3),
@@ -23,13 +26,18 @@ export default function TranOrSubContainer({
     );
 
     const isTransaction = (item: TransactionType | SubscriptionType): item is TransactionType =>
-        item !== null && typeof item === "object" && "transactionId" in item;
+    item !== null && typeof item === "object" && "transactionId" in item;
+
+  const onClickTransaction = useCallback((transaction: TransactionType) => {
+    setSelectedTransaction(transaction);
+    setOpenTransactionDetail(true);
+  }, []);
 
     return (
         <Paper elevation={1} sx={{ padding: 1, marginBottom: 2, width: "100%" }}>
             {firstItems.map((item) =>
                 isTransaction(item) ? (
-                    <Transaction key={(item as TransactionType).transactionId} Transaction={item as TransactionType} />
+                    <Transaction key={(item as TransactionType).transactionId} onClick={() => onClickTransaction(item as TransactionType)} Transaction={item as TransactionType} />
                 ) : (
                     <Subscription
                         key={(item as SubscriptionType).subscriptionId}
@@ -58,6 +66,15 @@ export default function TranOrSubContainer({
                     <Button onClick={() => setOpenCreate(false)}>Close</Button>
                 </DialogActions>
             </Dialog>
-        </Paper>
+            <Dialog open={openTransactionDetail} onClose={() => setOpenTransactionDetail(false)} fullWidth maxWidth="sm">
+                <DialogTitle>Transaction Details</DialogTitle>
+                <DialogContent>
+                    <TransactionDetails transaction={selectedTransaction!} onClose={()=>setOpenTransactionDetail(false)} />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenTransactionDetail(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
+      </Paper>
     );
 }

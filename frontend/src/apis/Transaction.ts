@@ -1,6 +1,7 @@
 import { TransactionArraySchema, TransactionSchema, type TransactionFormInput } from "../types/Transaction";
 import {httpService} from "../services/httpService";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import z from "zod";
 
 async function getAllTransactions() {
     const response = await httpService.get('transactions', TransactionArraySchema);
@@ -43,4 +44,19 @@ export function useAddTransaction() {
             queryClient.invalidateQueries({ queryKey: ["transactions", "last3"] });
         },
     });
+}
+
+async function deleteTransaction(transactionId: string) {
+  await httpService.delete(`transactions/${transactionId}`, z.string());
+}
+
+export function useDeleteTransaction(transactionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+      mutationFn: () => deleteTransaction(transactionId),
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ["transactions"] });
+          queryClient.invalidateQueries({ queryKey: ["transactions", "last3"] });
+      },
+  });
 }

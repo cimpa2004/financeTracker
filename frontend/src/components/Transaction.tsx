@@ -2,11 +2,12 @@ import { Box, Paper } from "@mui/material";
 import type { Transaction as TransactionType } from "../types/Transaction";
 import { Icon } from '../Icons/Icons.tsx';
 
-export interface TransactionProps{
-    Transaction: TransactionType;
+export interface TransactionProps {
+  Transaction: TransactionType;
+  onClick?: () => void;
 }
 
-export default function Transaction({ Transaction }: TransactionProps) {
+export default function Transaction({ Transaction, onClick }: TransactionProps) {
     return (
         <Paper
             elevation={2}
@@ -18,7 +19,9 @@ export default function Transaction({ Transaction }: TransactionProps) {
                 p: 2,
                 width: "100%",
                 marginBottom: 1,
+                cursor: onClick ? 'pointer' : 'default',
             }}
+            onClick={onClick}
         >
         <Icon name={typeof Transaction?.category === 'object' ? Transaction?.category?.icon ?? undefined : undefined}
           colorOf={Transaction?.category && typeof Transaction?.category === 'object' ? Transaction?.category?.color ?? undefined : undefined}
