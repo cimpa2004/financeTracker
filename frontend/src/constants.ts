@@ -10,4 +10,5 @@ export const ROUTES = {
   ADD_BUDGET: '/add-budget',
   STATISTICS: '/statistics',
   REPORTS: '/reports',
+  ALL_TRANSACTIONS: '/all-transactions',
 }

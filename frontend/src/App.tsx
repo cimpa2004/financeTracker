@@ -18,6 +18,7 @@ import BudgetChartsPage from './pages/BudgetChartsPage';
 import AddBudgetPage from './pages/AddBudgetPage';
 import StatisticsPage from './pages/StatisticsPage';
 import ReportsPage from './pages/ReportsPage';
+import AllTransactions from './pages/AllTransactions';
 
 const router = createBrowserRouter([
   {
@@ -69,6 +70,10 @@ const router = createBrowserRouter([
               {
                 path: ROUTES.REPORTS,
                 element: <ReportsPage />,
+              },
+              {
+                path: ROUTES.ALL_TRANSACTIONS,
+                element: <AllTransactions />,
               }
             ],
         },

@@ -193,6 +193,55 @@ public static class TransactionsApi
     .RequireAuthorization()
     .WithName("GetTransactionById");
 
+    app.MapGet("/api/transactions/paged", async (FinancetrackerContext db, HttpContext http, int page = 1, int size = 20) =>
+      {
+        // simple validation
+        if (page < 1) page = 1;
+        if (size < 1) size = 20;
+        if (size > 200) size = 200; // upper limit
+
+        if (!http.TryGetUserId(out var userId))
+          return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);
+
+        var query = db.Transactions.Where(t => t.UserId == userId).AsQueryable();
+        var total = await query.CountAsync();
+
+        var items = await query
+                .OrderByDescending(t => t.Date)
+                .ThenByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .Select(t => new
+                {
+                  t.TransactionId,
+                  Amount = t.Amount,
+                  Description = t.Description,
+                  Name = t.Name,
+                  Date = t.Date,
+                  CreatedAt = t.CreatedAt,
+                  Category = db.Categories
+                        .Where(c => c.CategoryId == t.CategoryId)
+                        .Select(c => new { c.CategoryId, c.Name, c.Icon, c.Color, c.Type })
+                        .FirstOrDefault(),
+                  User = db.Users
+                        .Where(u => u.UserId == t.UserId)
+                        .Select(u => new { u.UserId, u.Username, u.Email })
+                        .FirstOrDefault(),
+                  Subscription = t.SubscriptionId == null ? null :
+                        db.Subscriptions
+                          .Where(s => s.SubscriptionId == t.SubscriptionId)
+                          .Select(s => new { s.SubscriptionId, s.Name, s.Amount, s.Interval, s.PaymentDate, s.IsActive })
+                          .FirstOrDefault()
+                })
+                .ToListAsync();
+
+        var totalPages = (int)Math.Ceiling((double)total / size);
+
+        return Results.Ok(new { page, size, total, totalPages, items });
+      })
+      .RequireAuthorization()
+      .WithName("GetPagedTransactions");
+
     app.MapDelete("/api/transactions/{id}", async (Guid id, FinancetrackerContext db, HttpContext http) =>
     {
       if (!http.TryGetUserId(out var userId))
