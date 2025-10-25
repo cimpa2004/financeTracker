@@ -81,7 +81,7 @@ export default function TranOrSubContainer({
         <Dialog open={AllTransactionsOpen} onClose={() => setAllTransactionsOpen(false)} fullWidth maxWidth="sm">
                 <DialogTitle>All Transactions</DialogTitle>
           <DialogContent>
-            <PagedTransactions />
+              <PagedTransactions maxContentHeight={'55vh'}/>
           </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setAllTransactionsOpen(false)}>Close</Button>

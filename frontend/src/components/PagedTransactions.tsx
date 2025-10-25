@@ -6,7 +6,11 @@ import type { Transaction as TransactionType } from '../types/Transaction';
 import TransactionDetails from './TransactionDetails';
 import ThemedScrollbar from './ThemedScrollbar';
 
-export default function PagedTransactions() {
+interface PagedTransactionsProps {
+  maxContentHeight?: string | number;
+}
+
+export default function PagedTransactions({ maxContentHeight = '75vh' }: PagedTransactionsProps) {
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(5);
   const [openTransactionDetail, setOpenTransactionDetail] = useState(false);
@@ -32,28 +36,18 @@ export default function PagedTransactions() {
   );
 
   return (
-    <>
-      <Box display="flex" justifyContent="center">
-        <Box width="100%" maxWidth={800} sx={{ pb: 10 }}>
-          <ThemedScrollbar maxHeight={'75vh'}>
-            <Stack spacing={1}>
-              {data?.items?.map((t) => (
-                <Transaction key={t.transactionId} onClick={() => onClickTransaction(t)} Transaction={t} />
-              ))}
-            </Stack>
-          </ThemedScrollbar>
-        </Box>
+    <Box display="flex" justifyContent="center">
+      <Box width="100%" maxWidth={800} >
+        <ThemedScrollbar maxHeight={maxContentHeight}>
+          <Stack spacing={1}>
+            {data?.items?.map((t) => (
+              <Transaction key={t.transactionId} onClick={() => onClickTransaction(t)} Transaction={t} />
+            ))}
+          </Stack>
+        </ThemedScrollbar>
 
-        <Dialog open={openTransactionDetail} onClose={() => setOpenTransactionDetail(false)} fullWidth maxWidth="sm">
-          <DialogTitle>Transaction Details</DialogTitle>
-          <DialogContent>
-            <TransactionDetails transaction={selectedTransaction!} onClose={() => setOpenTransactionDetail(false)} />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenTransactionDetail(false)}>Close</Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
+
+
 
       {/* Pagination controls placed in normal flow under the list */}
       <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
@@ -72,7 +66,17 @@ export default function PagedTransactions() {
             <Pagination count={data ? data.totalPages : 1} page={page} onChange={(_, p) => setPage(p)} color="primary" />
           </Box>
         </Paper>
+          </Box>
+        </Box>
+        <Dialog open={openTransactionDetail} onClose={() => setOpenTransactionDetail(false)} fullWidth maxWidth="sm">
+          <DialogTitle>Transaction Details</DialogTitle>
+          <DialogContent>
+            <TransactionDetails transaction={selectedTransaction!} onClose={() => setOpenTransactionDetail(false)} />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenTransactionDetail(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-    </>
   );
 }
