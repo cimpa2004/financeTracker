@@ -38,7 +38,7 @@ export default function Home() {
             ) : (
                 <TranOrSubContainer Subscriptions={last3Subscriptions || []} />
             )} */}
-        <SpentByCategoryCard width={'100%'}/>
+        <SpentByCategoryCard />
         </Box>
     )
 }
