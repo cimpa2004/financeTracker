@@ -63,7 +63,7 @@ export default function SpentByIntervalCard() {
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 2 }}>
+    <Paper elevation={2} sx={{ p: 2, width: '100%', boxSizing: 'border-box', maxWidth: '100%' }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <Typography variant="h6">Spending over time</Typography>
         <Box display="flex" gap={1} alignItems="center">
@@ -76,20 +76,22 @@ export default function SpentByIntervalCard() {
         </Box>
       </Box>
 
-        <Box display="flex" gap={2} mb={2} alignItems="center">
+      <Box display={{ xs: 'block', sm: 'flex' }} gap={2} mb={2} alignItems="center">
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            label="Start date"
-            value={startDate ? new Date(startDate) : null}
-            onChange={(d) => setStartDate(d ? d.toISOString().slice(0, 10) : undefined)}
-            slotProps={{ textField: { size: "small" } }}
-          />
-          <DatePicker
-            label="End date"
-            value={endDate ? new Date(endDate) : null}
-            onChange={(d) => setEndDate(d ? d.toISOString().slice(0, 10) : undefined)}
-            slotProps={{ textField: { size: "small" } }}
-          />
+          <Box sx={{ display: 'flex', gap: 2, width: '100%', flexWrap: 'wrap' }}>
+            <DatePicker
+              label="Start date"
+              value={startDate ? new Date(startDate) : null}
+              onChange={(d) => setStartDate(d ? d.toISOString().slice(0, 10) : undefined)}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
+            />
+            <DatePicker
+              label="End date"
+              value={endDate ? new Date(endDate) : null}
+              onChange={(d) => setEndDate(d ? d.toISOString().slice(0, 10) : undefined)}
+              slotProps={{ textField: { size: "small", fullWidth: true } }}
+            />
+          </Box>
         </LocalizationProvider>
       </Box>
 
@@ -103,7 +105,7 @@ export default function SpentByIntervalCard() {
             <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="x" tickFormatter={formatX} stroke={theme.palette.text.secondary} />
-              <YAxis tickFormatter={(v) => new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(Number(v))} stroke={theme.palette.text.secondary} />
+              <YAxis width={80} tickMargin={8} tickFormatter={(v) => new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(Number(v))} stroke={theme.palette.text.secondary} />
               <Tooltip content={<ChartTooltip />} />
               <Line type="monotone" dataKey="y" stroke={theme.palette.primary.main} strokeWidth={2} dot={{ r: 2 }} />
             </LineChart>

@@ -25,11 +25,7 @@ function CustomTooltip({ active, payload, label, total, currency }: { active?: b
   );
 }
 
-interface SpentByCategoryCardProps {
-  width?: string | number;
-}
-
-export default function SpentByCategoryCard({ width = 'auto' }: SpentByCategoryCardProps) {
+export default function SpentByCategoryCard() {
   const [interval, setInterval] = useState<Interval>("AllTime");
   const { data, isLoading, isError } = useGetSpentByCategory(interval);
   const theme = useTheme();
@@ -64,7 +60,7 @@ export default function SpentByCategoryCard({ width = 'auto' }: SpentByCategoryC
 
 
   return (
-    <Paper elevation={2} sx={{ p: 2, width: { width } }}>
+    <Paper elevation={2} sx={{ p: 2, width: '100%', boxSizing: 'border-box', maxWidth: '100%' }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <Typography variant="h6">Spendings by category</Typography>
         <Select size="small" value={interval} onChange={(e) => setInterval(e.target.value as Interval)}>
@@ -82,7 +78,7 @@ export default function SpentByCategoryCard({ width = 'auto' }: SpentByCategoryC
         </Box>
       ) : (
         <Box display={{ xs: 'block', md: 'flex' }} alignItems="center" gap={2}>
-          <Box sx={{ width: { xs: '100%', md: '60%' }, height: 220 }}>
+    <Box sx={{ width: { xs: '100%', md: '60%' }, height: 220, minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={0} startAngle={90} endAngle={-270}>
@@ -95,7 +91,7 @@ export default function SpentByCategoryCard({ width = 'auto' }: SpentByCategoryC
             </ResponsiveContainer>
           </Box>
 
-          <Box sx={{ flex: 1 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <ThemedScrollbar>
               <Stack spacing={1}>
                 {chartData.map((c) => (

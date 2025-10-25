@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ElementType } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTheme } from '@mui/material/styles';
@@ -21,46 +22,52 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 import { TransactionFormSchema, type TransactionFormInput } from '../types/Transaction';
 import { useCategories } from '../apis/Category';
-import { useAddTransaction } from '../apis/Transaction';
+import { useAddTransaction, useUpdateTransaction } from '../apis/Transaction';
 import { useAuth } from '../contexts/AuthContext';
+import ThemedScrollbar from './ThemedScrollbar';
 
 type Props = {
   submitLabel?: string;
-  defaultValues?: Partial<TransactionFormInput>;
+  defaultValues?: Partial<TransactionFormInput> & { transactionId?: string };
+  onSuccess?: () => void;
 };
 
-export default function TransactionForm({ submitLabel = 'Add Transaction', defaultValues = {} }: Props) {
+export default function TransactionForm({ submitLabel = 'Add Transaction', defaultValues = {}, onSuccess }: Props) {
   const today = new Date().toISOString().slice(0, 10);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
   const { data: categories = [] } = useCategories();
-  const { mutate: addTransaction, isPending, isError, error, isSuccess } = useAddTransaction();
+  const addMutation = useAddTransaction();
+  const updateMutation = useUpdateTransaction();
+
+  const { mutate: addTransaction } = addMutation;
+  const { mutate: updateTransaction } = updateMutation;
 
   const [showError, setShowError] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | undefined;
-    if (isError) {
+    if (addMutation.error || updateMutation.error) {
       setShowError(true);
       t = setTimeout(() => setShowError(false), 2000);
     }
     return () => {
       if (t) clearTimeout(t);
     };
-  }, [isError]);
+  }, [addMutation.error, updateMutation.error]);
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout> | undefined;
-    if (isSuccess) {
+    if (addMutation.isSuccess || updateMutation.isSuccess) {
       setShowSuccess(true);
       t = setTimeout(() => setShowSuccess(false), 2000);
     }
     return () => {
       if (t) clearTimeout(t);
     };
-  }, [isSuccess]);
+  }, [addMutation.isSuccess, updateMutation.isSuccess]);
 
   const {
     control,
@@ -79,22 +86,46 @@ export default function TransactionForm({ submitLabel = 'Add Transaction', defau
     },
   });
 
+  const editingId = defaultValues?.transactionId;
+  const isEditing = Boolean(editingId);
+
   const internalSubmit = (data: TransactionFormInput) => {
-    addTransaction(
-      { ...data, userId: user?.userId || '' },
-      {
-        onSuccess: () => {
-          reset({
-            userId: user?.userId || '',
-            amount: '0',
-            name: '',
-            date: defaultValues.date ?? today,
-            categoryId: '',
-            description: '',
-          });
-        },
-      }
-    );
+    const payload = { ...data, userId: user?.userId || '' };
+    if (isEditing && editingId) {
+      updateTransaction(
+        { id: editingId, payload },
+        {
+          onSuccess: () => {
+            reset({
+              userId: user?.userId || '',
+              amount: '0',
+              name: '',
+              date: defaultValues.date ?? today,
+              categoryId: '',
+              description: '',
+            });
+            onSuccess?.();
+          },
+        }
+      );
+    } else {
+      addTransaction(
+        payload,
+        {
+          onSuccess: () => {
+            reset({
+              userId: user?.userId || '',
+              amount: '0',
+              name: '',
+              date: defaultValues.date ?? today,
+              categoryId: '',
+              description: '',
+            });
+            onSuccess?.();
+          },
+        }
+      );
+    }
   };
 
   return (
@@ -105,13 +136,26 @@ export default function TransactionForm({ submitLabel = 'Add Transaction', defau
 
       {showError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error?.message || 'An error occurred while adding the transaction'}
+          {(() => {
+            const err = addMutation.error ?? updateMutation.error;
+            if (!err) return 'An error occurred while adding/updating the transaction';
+            if (err instanceof Error) return err.message;
+            if (typeof err === 'object' && err !== null && 'message' in err) {
+              const m = (err as { message?: unknown }).message;
+              if (typeof m === 'string') return m;
+            }
+            try {
+              return JSON.stringify(err);
+            } catch {
+              return String(err);
+            }
+          })()}
         </Alert>
       )}
 
       {showSuccess && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          Transaction added successfully
+          {isEditing ? 'Transaction updated successfully' : 'Transaction added successfully'}
         </Alert>
       )}
 
@@ -166,15 +210,22 @@ export default function TransactionForm({ submitLabel = 'Add Transaction', defau
             render={({ field }) => (
               <FormControl fullWidth error={!!errors.categoryId}>
                 <InputLabel id="category-label">Category*</InputLabel>
-                <Select {...field} labelId="category-label" label="Category*">
-                  <MenuItem value="">
-                    <em>Select a category</em>
-                  </MenuItem>
-                  {categories.map((category) => (
-                    <MenuItem key={category.categoryId} value={category.categoryId}>
-                      {category.name}
+                <Select
+                  {...field}
+                  labelId="category-label"
+                  label="Category*"
+                  MenuProps={{
+                    PaperProps: { component: ThemedScrollbar as ElementType },
+                  }}
+                >
+                    <MenuItem value="">
+                      <em>Select a category</em>
                     </MenuItem>
-                  ))}
+                    {categories.map((category) => (
+                      <MenuItem key={category.categoryId} value={category.categoryId}>
+                        {category.type} - {category.name}
+                      </MenuItem>
+                    ))}
                 </Select>
                 {errors.categoryId && <FormHelperText>{errors.categoryId.message}</FormHelperText>}
               </FormControl>
@@ -190,8 +241,8 @@ export default function TransactionForm({ submitLabel = 'Add Transaction', defau
           />
 
           <Box sx={{ mt: 1 }}>
-            <Button type="submit" variant="contained" color="primary" fullWidth={isMobile} disabled={isPending || isSubmitting}>
-              {isPending || isSubmitting ? 'Submitting...' : submitLabel}
+            <Button type="submit" variant="contained" color="primary" fullWidth={isMobile} disabled={(addMutation.isPending || updateMutation.isPending) || isSubmitting}>
+              {(addMutation.isPending || updateMutation.isPending) || isSubmitting ? 'Submitting...' : submitLabel}
             </Button>
           </Box>
         </Stack>
