@@ -11,4 +11,5 @@ export const ROUTES = {
   STATISTICS: '/statistics',
   REPORTS: '/reports',
   ALL_TRANSACTIONS: '/all-transactions',
+  PROFILE: '/profile',
 }

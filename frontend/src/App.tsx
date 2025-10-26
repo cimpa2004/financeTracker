@@ -19,6 +19,7 @@ import AddBudgetPage from './pages/AddBudgetPage';
 import StatisticsPage from './pages/StatisticsPage';
 import ReportsPage from './pages/ReportsPage';
 import AllTransactions from './pages/AllTransactions';
+import Profile from './pages/Profile';
 
 const router = createBrowserRouter([
   {
@@ -74,6 +75,11 @@ const router = createBrowserRouter([
               {
                 path: ROUTES.ALL_TRANSACTIONS,
                 element: <AllTransactions />,
+              }
+              ,
+              {
+                path: ROUTES.PROFILE,
+                element: <Profile />,
               }
             ],
         },
