@@ -6,9 +6,6 @@ import { AppThemeProvider } from './theme';
 import { AuthProvider } from './providers/AuthProvider';
 import { router } from './routes';
 
-
-
-
 // const ReactQueryDevtools = lazy(() =>
 //   import('@tanstack/react-query-devtools').then((module) => ({
 //     default: module.ReactQueryDevtools,

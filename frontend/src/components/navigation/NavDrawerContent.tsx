@@ -3,7 +3,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+//import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import SummarizeIcon from '@mui/icons-material/Summarize';
+import DataSaverOffIcon from '@mui/icons-material/DataSaverOff';
 import CategoryIcon from '@mui/icons-material/Category';
 import PieChartIcon from '@mui/icons-material/PieChart';
 import NavItem from "./NavItem";
@@ -19,14 +22,14 @@ type PageDef = {
 
 const PAGES: PageDef[] = [
   { name: 'Home', route: ROUTES.HOME, icon: <HomeIcon /> },
-  { name: 'Add Transaction', route: ROUTES.ADD_TRANSACTION, icon: <AddShoppingCartIcon /> },
+  //{ name: 'Add Transaction', route: ROUTES.ADD_TRANSACTION, icon: <AddShoppingCartIcon /> },
   { name: 'Add Category', route: ROUTES.ADD_CATEGORY, icon: <CategoryIcon /> },
-  { name: 'Budget Charts', route: ROUTES.BUDGET_CHARTS, icon: <PieChartIcon /> },
-  { name: 'Add Budget', route: ROUTES.ADD_BUDGET, icon: <PieChartIcon /> },
+  { name: 'Budgets', route: ROUTES.BUDGET_CHARTS, icon: <DataSaverOffIcon /> },
+  //{ name: 'Add Budget', route: ROUTES.ADD_BUDGET, icon: <PieChartIcon /> },
   { name: 'Statistics', route: ROUTES.STATISTICS, icon: <PieChartIcon /> },
-  { name: 'Reports', route: ROUTES.REPORTS, icon: <PieChartIcon /> },
-  { name: 'All transactions', route: ROUTES.ALL_TRANSACTIONS, icon: <PieChartIcon /> },
-  { name: 'Profile', route: ROUTES.PROFILE, icon: <LoginIcon /> },
+  { name: 'Report', route: ROUTES.REPORTS, icon: <SummarizeIcon /> },
+  //{ name: 'All transactions', route: ROUTES.ALL_TRANSACTIONS, icon: <PieChartIcon /> },
+  { name: 'Profile', route: ROUTES.PROFILE, icon: <AccountBoxIcon /> },
 ];
 
 interface NavDrawerContentProps {
