@@ -184,6 +184,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isAuthenticated = Boolean(user && token);
     const isLoading = isRefreshing;
 
+    const setUserInContext = (newUser: User | null) => {
+      setUser(newUser);
+      if (newUser) {
+        localStorage.setItem('user', JSON.stringify(newUser));
+      } else {
+        localStorage.removeItem('user');
+      }
+    };
+
     return {
       user,
       token,
@@ -203,6 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         httpService.setGlobalHeader('Authorization', `Bearer ${t}`);
       },
+
+      setUser: setUserInContext,
 
       logout: handleLogout,
       refreshAuthToken: handleTokenRefresh,

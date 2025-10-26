@@ -134,6 +134,7 @@ app.MapGet("/", () => "OK");
 app.MapRegister();
 app.MapLogin();
 app.MapLogout();
+app.MapUser();
 app.MapTransactions();
 app.MapNewToken();
 app.MapSubscriptions();
