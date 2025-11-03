@@ -1,0 +1,16 @@
+# Get subscriptions sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as /api/subscriptions
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/subscriptions
+    API->>Auth: validate token -> get userId
+    API->>Db: SELECT subscriptions WHERE userId ORDER BY createdAt
+    Db-->>API: subscriptions
+    API-->>Client: 200 OK [subscriptions]
+
+```

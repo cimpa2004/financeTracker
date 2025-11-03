@@ -1,0 +1,17 @@
+# Get transactions (list) sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as /api/transactions
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/transactions
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT transactions WHERE userId ORDER BY date DESC
+    Db-->>API: transactions
+    API-->>Client: 200 OK [transactions]
+
+```

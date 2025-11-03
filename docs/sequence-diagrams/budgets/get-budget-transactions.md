@@ -1,0 +1,19 @@
+# Get budget transactions sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as /api/budgets/{id}/transactions
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/budgets/{id}/transactions
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT budget WHERE id & userId
+    Db-->>API: budget or null
+    API->>Db: SELECT transactions filtered by budget's category and date range
+    Db-->>API: transactions
+    API-->>Client: 200 OK [transactions]
+
+```

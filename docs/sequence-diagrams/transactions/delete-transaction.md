@@ -1,0 +1,19 @@
+# Delete transaction sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as /api/transactions/{id}
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: DELETE /api/transactions/{id}
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT transaction WHERE id & userId
+    Db-->>API: transaction or null
+    API->>Db: DELETE transaction
+    Db-->>API: removed
+    API-->>Client: 204 No Content
+
+```

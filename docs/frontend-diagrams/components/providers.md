@@ -1,0 +1,26 @@
+# Providers and Layout
+
+```mermaid
+classDiagram
+    class App {
+      +QueryClientProvider
+      +AppThemeProvider
+      +ToastProvider
+      +AuthProvider
+      +RouterProvider
+    }
+
+    class AppLayout {
+      +Header
+      +Sidebar
+      +Content
+      +Footer
+    }
+
+    App --> AppLayout
+    AppLayout --> Header
+    AppLayout --> Sidebar
+    AppLayout --> Content
+    AppLayout --> Footer
+
+```

@@ -1,0 +1,20 @@
+# Add Category — Relations
+
+Relations for the Add Category page.
+
+```mermaid
+flowchart LR
+  AddCategory[Add Category Page]
+  AppLayout[AppLayout]
+  AddCategoryForm[AddCategoryForm]
+  IconSelector[IconSelector]
+  CategoryAPI[apis/Category.ts]
+  Http[httpservice]
+
+  AddCategory --> AppLayout
+  AddCategory --> AddCategoryForm
+  AddCategory --> IconSelector
+
+  AddCategoryForm --> CategoryAPI
+  CategoryAPI --> Http
+```

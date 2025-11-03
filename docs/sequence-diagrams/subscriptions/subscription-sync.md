@@ -1,0 +1,23 @@
+# Subscription sync sequence (background job)
+
+```mermaid
+sequenceDiagram
+    participant Scheduler
+    participant SyncService
+    participant Db as FinancetrackerContext
+    participant Email as IEmailService
+
+    Scheduler->>SyncService: Run subscription sync
+    SyncService->>Db: SELECT subscriptions WHERE IsActive==true AND PaymentDate <= now
+    Db-->>SyncService: dueSubscriptions
+    loop for each subscription
+      SyncService->>Db: INSERT Transaction for subscription (amount, category, name, date)
+      Db-->>SyncService: Transaction saved
+      SyncService->>Db: UPDATE subscription.PaymentDate = NextPaymentDate
+      Db-->>SyncService: subscription updated
+      SyncService->>Email: NotifyBudgetsForTransactionAsync(transaction)
+      Email-->>SyncService: notification result
+    end
+    SyncService-->>Scheduler: summary (created N transactions)
+
+```

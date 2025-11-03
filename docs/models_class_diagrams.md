@@ -1,0 +1,129 @@
+## Models class diagrams (Mermaid)
+
+```mermaid
+classDiagram
+    %% core domain models
+    class User {
+      +Guid UserId
+      +string Username
+      +string Email
+      +string PasswordHash
+      +string Salt
+      +DateTime? CreatedAt
+      +DateTime? ModifiedAt
+    }
+
+    class Category {
+      +Guid CategoryId
+      +string Name
+      +string? Icon
+      +string? Color
+      +Guid? UserId
+      +string Type
+    }
+
+    class Budget {
+      +Guid BudgetId
+      +Guid UserId
+      +Guid? CategoryId
+      +string? Name
+      +DateTime? StartDate
+      +DateTime? EndDate
+      +DateTime? CreatedAt
+      +decimal Amount
+    }
+
+    class Transaction {
+      +Guid TransactionId
+      +Guid UserId
+      +Guid CategoryId
+      +decimal Amount
+      +string? Description
+      +DateTime? Date
+      +DateTime? CreatedAt
+      +string? Name
+      +Guid? SubscriptionId
+    }
+
+    class Subscription {
+      +Guid SubscriptionId
+      +Guid UserId
+      +Guid? CategoryId
+      +decimal? Amount
+      +string? Name
+      +string? Interval
+      +DateTime? PaymentDate
+      +bool IsActive
+      +DateTime? CreatedAt
+    }
+
+    class ExternalAccount {
+      +Guid AccountId
+      +Guid UserId
+      +string Platform
+      +string? AccessToken
+      +DateTime? ExpiresAt
+    }
+
+    class Household {
+      +Guid HouseholdId
+      +string Name
+    }
+
+    class HouseholdMember {
+      +Guid HouseholdId
+      +Guid UserId
+      +bool IsAdmin
+    }
+
+    class Notification {
+      +Guid NotificationId
+      +Guid? BudgetId
+      +Guid? TransactionId
+      +int Level
+      +DateTime? SentAt
+      +DateTime? PeriodStart
+      +DateTime? PeriodEnd
+    }
+
+    class FinancetrackerContext {
+      +DbSet<Budget> Budgets
+      +DbSet<Category> Categories
+      +DbSet<ExternalAccount> ExternalAccounts
+      +DbSet<Household> Households
+      +DbSet<HouseholdMember> HouseholdMembers
+      +DbSet<Transaction> Transactions
+      +DbSet<User> Users
+      +DbSet<Notification> Notifications
+      +DbSet<Subscription> Subscriptions
+    }
+
+    %% relationships
+    User "1" --> "0..*" Budget : budgets
+    User "1" --> "0..*" Category : categories
+    User "1" --> "0..*" Transaction : transactions
+    User "1" --> "0..*" ExternalAccount : externalAccounts
+    User "1" --> "0..*" HouseholdMember : householdMembers
+    User "1" --> "0..*" Subscription : subscriptions
+
+    Category "1" --> "0..*" Budget : budgets
+    Category "1" --> "0..*" Transaction : transactions
+    Category "1" --> "0..*" Subscription : subscriptions
+
+    Budget "*" --> "0..1" Category : category
+    Budget "*" --> "1" User : user
+
+    Transaction "*" --> "1" Category : category
+    Transaction "*" --> "1" User : user
+    Transaction "0..1" --> "1" Subscription : subscription
+
+    Subscription "1" --> "0..*" Transaction : transactions
+
+    FinancetrackerContext ..> User : uses
+    FinancetrackerContext ..> Transaction : uses
+    FinancetrackerContext ..> Category : uses
+    FinancetrackerContext ..> Subscription : uses
+
+```
+
+Generated on: 2025-11-03

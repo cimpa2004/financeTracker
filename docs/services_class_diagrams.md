@@ -1,0 +1,36 @@
+## Services & Helpers class diagrams (Mermaid)
+
+```mermaid
+classDiagram
+    class JwtService {
+      +string GenerateToken(User user)
+      +ClaimsPrincipal? ValidateToken(string token)
+    }
+
+    class ReportService {
+      +Report GenerateMonthlyReport(User user)
+    }
+
+    class Email {
+      +Task SendEmail(string to, string subject, string body)
+    }
+
+    class BudgetHelpers {
+      +decimal CalculatePeriodSpent(Budget budget)
+      +Budget? FindActiveBudget(User user, Guid categoryId)
+    }
+
+    class HttpContextExtensions {
+      +Guid? GetUserId(HttpContext ctx)
+    }
+
+    %% dependencies
+    JwtService ..> User : reads
+    ReportService ..> Transaction : reads
+    Email ..> Notification : sends
+    BudgetHelpers ..> Budget : reads/writes
+    HttpContextExtensions ..> User : identifies
+
+```
+
+Generated on: 2025-11-03

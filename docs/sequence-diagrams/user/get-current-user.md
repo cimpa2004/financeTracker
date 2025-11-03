@@ -1,0 +1,17 @@
+# Get current user sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as /api/user
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/user
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT user WHERE userId
+    Db-->>API: user
+    API-->>Client: 200 OK { user }
+
+```

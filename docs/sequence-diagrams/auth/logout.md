@@ -1,0 +1,11 @@
+# Logout sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as /api/logout
+
+    Client->>API: POST /api/logout (Authorization: Bearer <token>)
+    API-->>Client: 200 OK { message: "Successfully logged out." }
+
+```

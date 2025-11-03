@@ -1,0 +1,42 @@
+# All Transactions — Relations
+
+Focused relations for the `All Transactions` page.
+
+````mermaid
+flowchart LR
+  AllTx[All Transactions Page]
+  AppLayout[AppLayout]
+  TransactionsContainer[TransactionsContainer]
+  PagedTransactions[PagedTransactions]
+  TxAPI[apis/Transaction.ts]
+  Http[httpService]
+
+  AllTx --> AppLayout
+  AllTx --> TransactionsContainer
+  TransactionsContainer --> PagedTransactions
+  PagedTransactions --> TxAPI
+  TxAPI --> Http
+
+  classDef page fill:#f3f8ff,stroke:#333
+  classDef comp fill:#fff8e6,stroke:#333
+  class AllTx page
+  class TransactionsContainer,PagedTransactions comp
+# All Transactions — Relations
+
+Focused relations for the `All Transactions` page.
+
+```mermaid
+flowchart LR
+  AllTx[All Transactions Page]
+  AppLayout[AppLayout]
+  TransactionsContainer[TransactionsContainer]
+  PagedTransactions[PagedTransactions]
+  TxAPI[apis/Transaction.ts]
+  Http[httpservice]
+
+  AllTx --> AppLayout
+  AllTx --> TransactionsContainer
+  TransactionsContainer --> PagedTransactions
+  PagedTransactions --> TxAPI
+  TxAPI --> Http
+````

@@ -1,0 +1,17 @@
+# Login flow (frontend)
+
+```mermaid
+sequenceDiagram
+    participant UserUI as LoginPage
+    participant AuthApi as Auth.ts
+    participant Http as httpService
+    participant AuthProvider as AuthProvider
+    participant Router as Router
+
+    UserUI->>AuthApi: calls login(credentials)
+    AuthApi->>Http: POST /login
+    Http-->>AuthApi: response { tokens, user }
+    AuthApi->>AuthProvider: setAuthData(tokens,user)
+    AuthProvider-->>Router: navigate to Protected route (Home)
+
+```

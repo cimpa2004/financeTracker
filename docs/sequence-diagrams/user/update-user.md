@@ -1,0 +1,22 @@
+# Update current user sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as /api/user
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: PUT /api/user { username?, email?, password? }
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT user WHERE userId
+    Db-->>API: user
+    API->>Db: (if username/email changed) check uniqueness
+    Db-->>API: unique/exists
+    API->>API: if password provided, rehash
+    API->>Db: UPDATE user
+    Db-->>API: saved
+    API-->>Client: 200 OK { user }
+
+```

@@ -1,0 +1,18 @@
+# Login sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as /api/login
+    participant Db as FinancetrackerContext
+    participant Jwt as JwtService
+
+    Client->>API: POST /api/login { email, password }
+    API->>Db: SELECT user WHERE Username==email OR Email==email
+    Db-->>API: user (or null)
+    API->>API: VerifyPassword(password, user.Salt, user.PasswordHash)
+    API->>Jwt: GenerateTokens(user)
+    Jwt-->>API: { accessToken, refreshToken, expires }
+    API-->>Client: 200 OK { user, accessToken, refreshToken }
+
+```
