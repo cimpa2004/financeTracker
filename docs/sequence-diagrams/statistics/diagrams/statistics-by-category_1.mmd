@@ -1,0 +1,12 @@
+﻿sequenceDiagram
+    participant Client
+    participant API as /api/spent-by-category/{interval}
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/spent-by-category/{interval}
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT transactions WHERE userId AND date >= periodStart AND is expense
+    Db-->>API: transactions grouped by category
+    API-->>Client: 200 OK { TotalSpent, ByCategory }

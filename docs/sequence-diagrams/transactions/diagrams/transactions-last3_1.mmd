@@ -1,0 +1,12 @@
+﻿sequenceDiagram
+    participant Client
+    participant API as /api/transactions/last3
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/transactions/last3
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT top 3 transactions WHERE userId ORDER BY date DESC, createdAt DESC
+    Db-->>API: transactions
+    API-->>Client: 200 OK [transactions]

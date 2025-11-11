@@ -1,0 +1,12 @@
+﻿sequenceDiagram
+    participant Client
+    participant API as /api/budgets/{id}
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/budgets/{id}
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT budget WHERE BudgetId==id AND UserId==userId INCLUDE Category
+    Db-->>API: budget or null
+    API-->>Client: 200 OK { budget } or 404

@@ -1,0 +1,24 @@
+﻿classDiagram
+    class LoginApi { +POST /api/login }
+    class RegisterApi { +POST /api/register }
+    class NewTokenApi { +POST /api/auth/refresh }
+    class LogoutApi { +POST /api/logout }
+    class TransactionsApi { +CRUD /api/transactions }
+    class SubscriptionsApi { +GET /api/subscriptions }
+    class BudgetsApi { +CRUD /api/budgets }
+    class CategoriesApi { +CRUD /api/categories }
+    class UserApi { +GET /api/user\n+    +PUT /api/user }
+    class ReportsApi { +GET /api/reports/budgets }
+    class SpentThisMonthApi { +GET /api/spent-last-month }
+    class JwtService
+    class IEmailService
+    class BudgetHelpers
+    class FinancetrackerContext
+
+    LoginApi ..> FinancetrackerContext : reads Users
+    RegisterApi ..> FinancetrackerContext : writes Users
+    NewTokenApi ..> JwtService : validate/issue tokens
+    TransactionsApi ..> FinancetrackerContext : reads/writes Transactions/Categories/Subscriptions
+    TransactionsApi ..> IEmailService : NotifyBudgetsForTransactionAsync
+    BudgetsApi ..> BudgetHelpers : NormalizeRangeForResponse/ValidateCategoryExists
+    ReportsApi ..> ReportService : GenerateBudgetReportPdfAsync

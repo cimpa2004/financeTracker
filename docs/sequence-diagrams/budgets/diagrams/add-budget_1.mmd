@@ -1,0 +1,16 @@
+﻿sequenceDiagram
+    participant Client
+    participant API as /api/budgets
+    participant Auth
+    participant Db as FinancetrackerContext
+    participant Helpers as BudgetHelpers
+
+    Client->>API: POST /api/budgets { categoryId?, amount, startDate?, endDate? }
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Helpers: ValidateCategoryExistsAsync(categoryId, db, userId)
+    Helpers-->>API: valid/invalid
+    API->>Db: INSERT Budget
+    Db-->>API: budget created
+    API->>Helpers: NormalizeRangeForResponse(startDate,endDate)
+    API-->>Client: 201 Created { budget }

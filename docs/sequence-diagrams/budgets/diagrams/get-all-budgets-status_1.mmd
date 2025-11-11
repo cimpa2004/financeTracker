@@ -1,0 +1,15 @@
+﻿sequenceDiagram
+    participant Client
+    participant API as /api/budgets/status
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/budgets/status
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT budgets WHERE userId INCLUDE Category
+    Db-->>API: budgets
+    API->>Db: SELECT transactions WHERE userId
+    Db-->>API: transactions
+    API->>API: compute per-budget Spent and Remaining in-memory
+    API-->>Client: 200 OK [results]

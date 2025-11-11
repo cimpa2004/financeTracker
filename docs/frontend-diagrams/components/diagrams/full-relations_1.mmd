@@ -1,0 +1,112 @@
+﻿flowchart TD
+  %% Pages
+  subgraph Pages
+    P_Welcome[WelcomePage]
+    P_Login[Login]
+    P_Register[Register]
+    P_Home[Home]
+    P_AddTx[AddTransactionForm]
+    P_AddCat[AddCategoryPage]
+    P_AddBudget[AddBudgetPage]
+    P_BudgetCharts[BudgetChartsPage]
+    P_Stats[StatisticsPage]
+    P_Reports[ReportsPage]
+    P_AllTx[AllTransactions]
+    P_Profile[Profile]
+  end
+
+  %% Components
+  subgraph Components
+    C_AddBudgetForm[AddBudgetForm]
+    C_AddCategoryForm[AddCategoryForm]
+    C_BudgetDetails[BudgetDetails]
+    C_IconSelector[IconSelector]
+    C_PagedTransactions[PagedTransactions]
+    C_SpentByCategory[SpentByCategoryCard]
+    C_SpentByInterval[SpentByIntervalCard]
+    C_SpentThisMonth[SpentThisMonth]
+    C_Subscription[Subsription]
+    C_ThemedScrollbar[ThemedScrollbar]
+    C_Transaction[Transaction]
+    C_TransactionDetails[TransactionDetails]
+    C_TransactionForm[TransactionForm]
+    C_TransactionsContainer[TransactionsContainer]
+  end
+
+  %% Layouts & Providers
+  subgraph Layouts_Providers
+    L_AppLayout[AppLayout]
+    Prov_Auth[AuthProvider]
+    Prov_Toast[ToastProvider]
+  end
+
+  %% Services & APIs
+  subgraph Services_APIs
+    S_Http[httpService]
+    API_Auth[apis/Auth.ts]
+    API_Transaction[apis/Transaction.ts]
+    API_Reports[apis/Reports.ts]
+    API_Statistics[apis/Statistics.ts]
+    API_Subscription[apis/Subscription.ts]
+    API_Category[apis/Category.ts]
+    API_Budget[apis/Budget.ts]
+    API_User[apis/User.ts]
+  end
+
+  %% Relations (inferred)
+  P_Home --> C_SpentThisMonth
+  P_Home --> C_TransactionsContainer
+  P_AddTx --> C_TransactionForm
+  P_AddTx --> C_IconSelector
+  P_AddCat --> C_AddCategoryForm
+  P_AddCat --> C_IconSelector
+  P_AddBudget --> C_AddBudgetForm
+  P_AddBudget --> C_BudgetDetails
+  P_BudgetCharts --> C_BudgetDetails
+  P_BudgetCharts --> C_SpentByCategory
+  P_BudgetCharts --> C_SpentByInterval
+  P_Stats --> C_SpentByCategory
+  P_Stats --> C_SpentByInterval
+  P_AllTx --> C_TransactionsContainer
+  P_AllTx --> C_PagedTransactions
+
+  %% Pages use layout/providers
+  P_Home --> L_AppLayout
+  P_AddTx --> L_AppLayout
+  P_AddCat --> L_AppLayout
+  P_AddBudget --> L_AppLayout
+  P_BudgetCharts --> L_AppLayout
+  P_Stats --> L_AppLayout
+  P_Reports --> L_AppLayout
+  P_AllTx --> L_AppLayout
+  P_Profile --> L_AppLayout
+
+  P_Login --> Prov_Auth
+  P_Register --> Prov_Auth
+
+  %% Providers use services
+  Prov_Auth --> API_Auth
+  Prov_Auth --> S_Http
+  Prov_Toast --> S_Http
+
+  %% Components and pages call APIs through service modules
+  C_TransactionForm --> API_Transaction
+  C_TransactionsContainer --> API_Transaction
+  C_PagedTransactions --> API_Transaction
+  C_SpentByCategory --> API_Statistics
+  C_SpentByInterval --> API_Statistics
+  P_Reports --> API_Reports
+  C_Subscription --> API_Subscription
+  C_AddCategoryForm --> API_Category
+  C_AddBudgetForm --> API_Budget
+  P_Profile --> API_User
+
+  %% Service uses http service
+  API_Transaction --> S_Http
+  API_Reports --> S_Http
+  API_Statistics --> S_Http
+  API_Subscription --> S_Http
+  API_Category --> S_Http
+  API_Budget --> S_Http
+  API_User --> S_Http
+  API_Auth --> S_Http

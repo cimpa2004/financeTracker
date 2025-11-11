@@ -1,0 +1,18 @@
+﻿sequenceDiagram
+    participant Client
+    participant API as /api/budgets/{id}
+    participant Auth
+    participant Db as FinancetrackerContext
+    participant Helpers as BudgetHelpers
+
+    Client->>API: PUT /api/budgets/{id} { categoryId?, amount, name?, startDate?, endDate? }
+    API->>Auth: validate token -> get userId
+    Auth-->>API: userId
+    API->>Db: SELECT budget WHERE id & userId
+    Db-->>API: budget or null
+    API->>Helpers: ValidateCategoryExistsAsync(req.CategoryId, db, userId)
+    Helpers-->>API: valid/invalid
+    API->>Db: UPDATE budget fields
+    Db-->>API: saved
+    API->>Helpers: BuildCategoryObjectAsync(budget, db)
+    API-->>Client: 200 OK { updated budget }

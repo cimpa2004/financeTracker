@@ -1,0 +1,33 @@
+﻿sequenceDiagram
+    participant Client
+    participant API as /api/categories
+    participant Auth
+    participant Db as FinancetrackerContext
+
+    Client->>API: POST /api/categories { name, icon?, color?, type, isPublic }
+    API->>Auth: validate token -> get userId
+    API->>Db: INSERT category (UserId null if public)
+    Db-->>API: created
+    API-->>Client: 201 Created { category }
+
+    Client->>API: GET /api/categories
+    API->>Auth: validate token -> get userId
+    API->>Db: SELECT categories WHERE UserId==userId OR UserId IS NULL
+    Db-->>API: categories
+    API-->>Client: 200 OK [categories]
+
+    Client->>API: PUT /api/categories/{id}
+    API->>Auth: validate token -> get userId
+    API->>Db: SELECT category
+    Db-->>API: category
+    API->>Db: If owner (UserId==userId) UPDATE
+    Db-->>API: saved
+    API-->>Client: 200 OK { category }
+
+    Client->>API: DELETE /api/categories/{id}
+    API->>Auth: validate token -> get userId
+    API->>Db: SELECT category
+    Db-->>API: category
+    API->>Db: If owner delete
+    Db-->>API: removed
+    API-->>Client: 204 No Content
