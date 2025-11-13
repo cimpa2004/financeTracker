@@ -1,0 +1,81 @@
+classDiagram
+    %% Backend APIs and Services class diagram (generated)
+
+    class FinancetrackerContext {
+        +DbSet<Budget> Budgets
+        +DbSet<Category> Categories
+        +DbSet<Transaction> Transactions
+        +DbSet<User> Users
+        +DbSet<Notification> Notifications
+    }
+
+    class ReportService {
+        +GenerateBudgetReportPdfAsync(userId, from, to)
+    }
+
+    class JwtService {
+        +GenerateTokens(user)
+    }
+
+    class IEmailService {
+        <<interface>>
+        +SendTemplatedEmailAsync(to, subjectTemplate, htmlTemplate, model)
+        +NotifyBudgetsForTransactionAsync(tx, db, logger)
+    }
+
+    class MailjetEmailService {
+        +SendTemplatedEmailAsync(...)
+        +NotifyBudgetsForTransactionAsync(...)
+    }
+
+    class TransactionsApi {
+        <<static>>
+        +MapTransactions(app)
+    }
+
+    class ReportsApi {
+        <<static>>
+        +MapReports(app)
+    }
+
+    class UserApi {
+        <<static>>
+        +MapUser(app)
+    }
+
+    class LoginApi {
+        <<static>>
+        +MapLogin(app)
+    }
+
+     class LogoutApi {
+        +MapLogout(app)
+    }
+
+    class BudgetsApi {
+        <<static>>
+        +MapBudgets(app)
+    }
+
+    %% SubscriptionsApi removed per request
+
+    class CategoriesApi {
+        <<static>>
+        +MapCategories(app)
+    }
+
+    %% Relationships
+    ReportService --> FinancetrackerContext
+    TransactionsApi --> FinancetrackerContext
+    ReportsApi --> FinancetrackerContext
+    ReportsApi --> ReportService
+    BudgetsApi --> FinancetrackerContext
+    CategoriesApi --> FinancetrackerContext
+    UserApi --> FinancetrackerContext
+    TransactionsApi --> IEmailService
+    IEmailService ..> FinancetrackerContext
+    MailjetEmailService --|> IEmailService
+    MailjetEmailService --> IHttpClientFactory
+    LoginApi --> JwtService
+
+    %% (notes omitted for mermaid compatibility)
