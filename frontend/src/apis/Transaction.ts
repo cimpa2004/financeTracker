@@ -15,18 +15,6 @@ export function useTransactionApi() {
     })
 }
 
-async function getLast3Transactions() {
-    const response = await httpService.get('transactions/last3', TransactionArraySchema);
-    return response;
-}
-
-export function useLast3Transactions() {
-    return useQuery({
-        queryKey: ["transactions", "last3"],
-        queryFn: getLast3Transactions,
-    })
-}
-
 const PagedTransactionsSchema = z.object({
     page: z.number(),
     size: z.number(),

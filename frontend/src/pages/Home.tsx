@@ -1,13 +1,13 @@
 import { Box, CircularProgress } from "@mui/material";
 import SpentThisMonth from "../components/SpentThisMonth";
 import TranOrSubContainer from "../components/TransactionsContainer";
-import { useLast3Transactions } from "../apis/Transaction";
+import { usePagedTransactions } from "../apis/Transaction";
 import SpentByCategoryCard from "../components/SpentByCategoryCard";
 // import { useLast3Subscriptions } from "../apis/Subsription";
 
 //code is commented out couse subscribtions are not part of the MVP
 export default function Home() {
-    const { data: last3Transactions, isLoading, isError } = useLast3Transactions();
+    const { data: pagedData, isLoading, isError } = usePagedTransactions(1, 3);
     // const { data: last3Subscriptions, isLoading: isLoadingSubscriptions, isError: isErrorSubscriptions } = useLast3Subscriptions();
     if (isLoading /*|| isLoadingSubscriptions*/) {
         return <CircularProgress />;
@@ -28,7 +28,7 @@ export default function Home() {
             mx="auto"
         >
             <SpentThisMonth />
-            <TranOrSubContainer Transactions={last3Transactions || []} />
+            <TranOrSubContainer Transactions={pagedData?.items || []} />
             {/* {last3Subscriptions?.length === 0 ? (
                 <Box>No subscriptions found</Box>
             ) : (
