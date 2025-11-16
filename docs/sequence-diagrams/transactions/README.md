@@ -9,7 +9,6 @@ Diagrams for transaction-related endpoints.
 - [Get last3 transactions](/docs/sequence-diagrams/transactions-last3.md)
 - [Update transaction](/docs/sequence-diagrams/update-transaction.md)
 - [Delete transaction](/docs/sequence-diagrams/delete-transaction.md)
-- [Set transaction subscription](/docs/sequence-diagrams/set-transaction-subscription.md)
 - [Create transaction](./create-transaction.md)
 - [Get transactions (list)](./get-transactions.md)
 - [Get transaction by id](./get-transaction-by-id.md)
@@ -17,4 +16,3 @@ Diagrams for transaction-related endpoints.
 - [Get last3 transactions](./transactions-last3.md)
 - [Update transaction](./update-transaction.md)
 - [Delete transaction](./delete-transaction.md)
-- [Set transaction subscription](./set-transaction-subscription.md)

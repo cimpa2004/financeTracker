@@ -13,12 +13,10 @@ sequenceDiagram
     Auth-->>API: userId
     API->>Db: Verify category exists and belongs to user or is public
     Db-->>API: category exists
-    API->>Db: (if provided) Verify subscription belongs to user
-    Db-->>API: subscription exists
     API->>Db: INSERT Transaction
     Db-->>API: Transaction saved
     API->>Email: NotifyBudgetsForTransactionAsync(transaction)
     Email-->>API: notifications queued/sent
-    API-->>Client: 201 Created { transaction with nested Category, User, Subscription }
+    API-->>Client: 201 Created { transaction with nested Category, User }
 
 ```

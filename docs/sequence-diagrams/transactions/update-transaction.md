@@ -8,14 +8,12 @@ sequenceDiagram
     participant Db as FinancetrackerContext
     participant Email as IEmailService
 
-    Client->>API: PUT /api/transactions/{id} { CategoryId, Amount, Name, Description, Date, SubscriptionId }
+    Client->>API: PUT /api/transactions/{id} { CategoryId, Amount, Name, Description, Date }
     API->>Auth: validate token -> get userId
     Auth-->>API: userId
     API->>Db: SELECT transaction WHERE id & userId
     Db-->>API: transaction or null
     API->>Db: Verify category exists for user or public
-    Db-->>API: exists
-    API->>Db: (if provided) verify subscription belongs to user
     Db-->>API: exists
     API->>Db: UPDATE transaction fields
     Db-->>API: saved
