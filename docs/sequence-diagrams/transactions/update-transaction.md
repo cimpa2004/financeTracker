@@ -4,7 +4,7 @@
 sequenceDiagram
     participant Client
     participant API as /api/transactions/{id}
-    participant Auth
+    participant Auth as AuthorizationMiddleware
     participant Db as FinancetrackerContext
     participant Email as IEmailService
 
