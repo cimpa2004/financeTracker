@@ -54,11 +54,9 @@ export default function TranOrSubContainer({
                   <Button variant="outlined" color="primary" onClick={()=>setAllTransactionsOpen(true)}>Show All</Button>
                   <Button variant="contained" color="primary" onClick={() => setOpenCreate(true)}>Add New Transaction</Button>
                 </>
-              ) : (<>
-                  <Button variant="outlined" color="primary">Show All</Button>
-                  <Button variant="contained" color="primary">Add New Subscription</Button>
-              </>
-              )}
+                            ) : (
+                                <Button variant="contained" color="primary" onClick={() => setOpenCreate(true)}>Add New Transaction</Button>
+                            )}
             </Stack>
             <Dialog open={openCreate} onClose={() => setOpenCreate(false)} fullWidth maxWidth="sm">
                 <DialogTitle>Add Transaction</DialogTitle>

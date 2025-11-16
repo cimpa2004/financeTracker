@@ -28,11 +28,7 @@ export default function Home() {
             mx="auto"
         >
             <SpentThisMonth />
-            {last3Transactions?.length === 0 ? (
-                <Box>No transactions found</Box>
-            ) : (
-                <TranOrSubContainer Transactions={last3Transactions || []} />
-            )}
+            <TranOrSubContainer Transactions={last3Transactions || []} />
             {/* {last3Subscriptions?.length === 0 ? (
                 <Box>No subscriptions found</Box>
             ) : (
