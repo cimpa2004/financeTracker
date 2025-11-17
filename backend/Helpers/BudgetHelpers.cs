@@ -7,6 +7,8 @@ namespace backend.Helpers
 {
   public static class BudgetHelpers
   {
+    public enum BudgetPeriodType { None, Weekly, Monthly, Yearly }
+
     // helper to get last day of month (UTC midnight)
     private static DateTime LastDayOfMonth(DateTime d) => new DateTime(d.Year, d.Month, DateTime.DaysInMonth(d.Year, d.Month), 0, 0, 0, DateTimeKind.Utc);
 
@@ -58,6 +60,58 @@ namespace backend.Helpers
       var monthEnd = LastDayOfMonth(monthStart);
 
       return (monthStart, monthEnd);
+    }
+
+    // Detects canonical period type based on exact boundary patterns
+    public static BudgetPeriodType DetectPeriodType(DateTime? startDate, DateTime? endDate)
+    {
+      if (!startDate.HasValue || !endDate.HasValue) return BudgetPeriodType.None;
+
+      var sUtc = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
+      var eUtc = DateTime.SpecifyKind(endDate.Value.Date, DateTimeKind.Utc);
+
+      // Yearly: Jan 1 - Dec 31 of same year
+      if (sUtc.Month == 1 && sUtc.Day == 1 && eUtc.Month == 12 && eUtc.Day == 31 && sUtc.Year == eUtc.Year)
+        return BudgetPeriodType.Yearly;
+
+      // Monthly: 1st to last day of same month
+      if (sUtc.Day == 1 && sUtc.Year == eUtc.Year && sUtc.Month == eUtc.Month && eUtc.Day == DateTime.DaysInMonth(eUtc.Year, eUtc.Month))
+        return BudgetPeriodType.Monthly;
+
+      // Weekly: Monday .. Sunday (7 days span)
+      var isMonday = sUtc.DayOfWeek == DayOfWeek.Monday;
+      if (isMonday && (eUtc - sUtc).TotalDays >= 6 && (eUtc - sUtc).TotalDays < 7.1)
+        return BudgetPeriodType.Weekly;
+
+      return BudgetPeriodType.None;
+    }
+
+    // Advance to next period window for canonical types
+    public static (DateTime nextStart, DateTime nextEnd) NextPeriod(DateTime currStart, DateTime currEnd, BudgetPeriodType type)
+    {
+      currStart = DateTime.SpecifyKind(currStart.Date, DateTimeKind.Utc);
+      currEnd = DateTime.SpecifyKind(currEnd.Date, DateTimeKind.Utc);
+      switch (type)
+      {
+        case BudgetPeriodType.Yearly:
+          return (new DateTime(currStart.Year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                  new DateTime(currEnd.Year + 1, 12, 31, 0, 0, 0, DateTimeKind.Utc));
+        case BudgetPeriodType.Monthly:
+          {
+            var nextMonth = currStart.AddMonths(1);
+            var start = new DateTime(nextMonth.Year, nextMonth.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var end = LastDayOfMonth(start);
+            return (start, end);
+          }
+        case BudgetPeriodType.Weekly:
+          {
+            var start = currStart.AddDays(7);
+            var end = start.AddDays(6);
+            return (start, end);
+          }
+        default:
+          return (currStart, currEnd);
+      }
     }
 
     public static async Task<bool> ValidateCategoryExistsAsync(Guid? categoryId, FinancetrackerContext db, Guid userId)

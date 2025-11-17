@@ -48,6 +48,9 @@ builder.Services.AddSingleton<backend.services.IEmailService, backend.services.M
 // register report service
 builder.Services.AddScoped<backend.services.ReportService>();
 
+// background service to auto-renew budget periods (weekly/monthly/yearly)
+builder.Services.AddHostedService<backend.services.BudgetPeriodRenewalService>();
+
 // -- ADD: configure JWT authentication --
 // ensure you have a secret in configuration: "Jwt:Key"
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "very_secure_key_for_development_purposes_only";
