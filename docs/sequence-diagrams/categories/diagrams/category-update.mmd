@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant Client
+    participant API as /api/categories
+    participant AuthorizationMiddleware
+    participant Db as FinancetrackerContext
+
+    Client->>API: PUT /api/categories/{id}
+    API->>AuthorizationMiddleware: validate token -> get userId
+    API->>Db: SELECT category
+    Db-->>API: category
+    API->>Db: If owner (UserId==userId) UPDATE
+    Db-->>API: saved
+    API-->>Client: 200 OK { category }

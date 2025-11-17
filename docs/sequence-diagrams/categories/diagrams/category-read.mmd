@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant Client
+    participant API as /api/categories
+    participant AuthorizationMiddleware
+    participant Db as FinancetrackerContext
+
+    Client->>API: GET /api/categories
+        API->>AuthorizationMiddleware: validate token
+        AuthorizationMiddleware-->>API: userId
+        API->>Db: SELECT categories WHERE UserId==userId OR UserId IS NULL
+    Db-->>API: categories
+    API-->>Client: 200 OK [categories]
