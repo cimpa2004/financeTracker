@@ -45,40 +45,43 @@ public partial class FinancetrackerContext : DbContext
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
     modelBuilder.Entity<Budget>(entity =>
-    {
-      entity.HasKey(e => e.BudgetId).HasName("PK__budget__3A655C14965D44A5");
+{
+entity.HasKey(e => e.BudgetId).HasName("PK__budget__3A655C14965D44A5");
 
-      entity.ToTable("budget");
+  // Disable SQL OUTPUT clause for this table to support triggers
+entity.ToTable("budget", tb => tb.UseSqlOutputClause(false));
+  // Additionally mark that the table has a trigger so EF falls back on older technique if needed
+entity.ToTable(tb => tb.HasTrigger("budget_trigger"));
 
-      entity.Property(e => e.BudgetId)
-              .HasDefaultValueSql("(newsequentialid())")
-              .HasColumnName("budget_id");
-      entity.Property(e => e.Amount)
-              .HasColumnType("decimal(10, 2)")
-              .HasColumnName("amount");
-      entity.Property(e => e.CategoryId).HasColumnName("category_id");
-      entity.Property(e => e.Name)
-              .HasMaxLength(255)
-              .HasColumnName("name");
-      entity.Property(e => e.StartDate)
-              .HasColumnType("datetime")
-              .HasColumnName("start_date");
-      entity.Property(e => e.EndDate)
-              .HasColumnType("datetime")
-              .HasColumnName("end_date");
-      entity.Property(e => e.CreatedAt)
-              .HasColumnType("datetime")
-              .HasColumnName("created_at");
-      entity.Property(e => e.UserId).HasColumnName("user_id");
+entity.Property(e => e.BudgetId)
+  .HasDefaultValueSql("(newsequentialid())")
+  .HasColumnName("budget_id");
+entity.Property(e => e.Amount)
+  .HasColumnType("decimal(10, 2)")
+  .HasColumnName("amount");
+entity.Property(e => e.CategoryId).HasColumnName("category_id");
+entity.Property(e => e.Name)
+  .HasMaxLength(255)
+  .HasColumnName("name");
+entity.Property(e => e.StartDate)
+  .HasColumnType("datetime")
+  .HasColumnName("start_date");
+entity.Property(e => e.EndDate)
+  .HasColumnType("datetime")
+  .HasColumnName("end_date");
+entity.Property(e => e.CreatedAt)
+  .HasColumnType("datetime")
+  .HasColumnName("created_at");
+entity.Property(e => e.UserId).HasColumnName("user_id");
 
-      entity.HasOne(d => d.Category).WithMany(p => p.Budgets)
-              .HasForeignKey(d => d.CategoryId)
-              .HasConstraintName("FK__budget__category__37A5467C");
+entity.HasOne(d => d.Category).WithMany(p => p.Budgets)
+  .HasForeignKey(d => d.CategoryId)
+  .HasConstraintName("FK__budget__category__37A5467C");
 
-      entity.HasOne(d => d.User).WithMany(p => p.Budgets)
-              .HasForeignKey(d => d.UserId)
-              .HasConstraintName("FK__budget__user_id__36B12243");
-    });
+entity.HasOne(d => d.User).WithMany(p => p.Budgets)
+  .HasForeignKey(d => d.UserId)
+  .HasConstraintName("FK__budget__user_id__36B12243");
+});
 
     modelBuilder.Entity<Category>(entity =>
     {
