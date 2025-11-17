@@ -1,12 +1,12 @@
 ﻿sequenceDiagram
     participant Client
     participant API as /api/budgets/status
-    participant Auth
+    participant AuthorizationMiddleware
     participant Db as FinancetrackerContext
 
     Client->>API: GET /api/budgets/status
-    API->>Auth: validate token -> get userId
-    Auth-->>API: userId
+    API->>AuthorizationMiddleware: validate token
+    AuthorizationMiddleware-->>API: userId
     API->>Db: SELECT budgets WHERE userId INCLUDE Category
     Db-->>API: budgets
     API->>Db: SELECT transactions WHERE userId

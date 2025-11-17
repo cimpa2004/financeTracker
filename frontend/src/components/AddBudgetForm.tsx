@@ -12,7 +12,6 @@ import {
 	MenuItem,
 	FormHelperText,
 	Stack,
-	Typography,
 	Alert,
 	InputAdornment,
 } from '@mui/material';
@@ -113,9 +112,6 @@ export default function AddBudgetForm({ onSuccess, budgetId = null, initialValue
 	return (
 		<Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', p: 2 }}>
 			<Box sx={{ width: '100%', maxWidth: 520, mx: 'auto' }}>
-			<Typography variant="h6" gutterBottom>
-				Add Budget
-			</Typography>
 
 			{mutationError && (
 				<Alert severity="error" sx={{ mb: 2 }}>
