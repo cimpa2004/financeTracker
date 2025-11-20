@@ -10,7 +10,7 @@ public static class ReportsApi
 
   public static void MapReports(this WebApplication app)
   {
-    app.MapGet("/api/reports/budgets", async (FinancetrackerContext db, HttpContext http, ReportService reports) =>
+    app.MapGet("/api/report", async (FinancetrackerContext db, HttpContext http, ReportService reports) =>
     {
       if (!http.TryGetUserId(out var userId))
         return Results.Json(new { error = UnauthorizedMessage }, statusCode: 401);

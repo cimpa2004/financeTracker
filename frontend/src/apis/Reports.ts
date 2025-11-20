@@ -4,7 +4,7 @@ import { httpService } from "../services/httpService";
 export function useDownloadBudgetReport(from: string, to: string) {
   return useMutation({
     mutationFn: async (): Promise<Blob> => {
-      return await httpService.download(`reports/budgets?from=${from}&to=${to}`);
+      return await httpService.download(`report?from=${from}&to=${to}`);
     },
     onSuccess: (blob: Blob) => {
       const url = globalThis.URL.createObjectURL(blob);
