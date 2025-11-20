@@ -14,7 +14,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   const item = payload[0];
   return (
     <Box sx={{ bgcolor: (t) => t.palette.background.paper, color: (t) => t.palette.text.primary, p: 1, boxShadow: 3, borderRadius: 1 }}>
-      <Typography variant="subtitle2">{label}</Typography>
+      <Typography variant="subtitle2">{label ? new Date(label).toISOString().slice(0, 10) : ''}</Typography>
       <Typography variant="body2">{new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 }).format(item?.value ?? 0)}</Typography>
     </Box>
   );
