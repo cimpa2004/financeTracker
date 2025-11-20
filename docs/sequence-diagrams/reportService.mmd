@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant Reports
+    participant API as ReportService.GenerateBudgetReportPdfAsync
+    participant Db as FinancetrackerContext
+    participant CategoryDb as Categories
+    participant PDF as QuestPDF/SkiaSharp
+
+    Reports->>API: GenerateBudgetReportPdfAsync(userId, from, to)
+    API->>Db: Query budgets for user
+    Db-->>API: Budgets list
+    API->>Db: Query transactions for user in date range
+    Db-->>API: Transactions list
+    API->>Db: Query categories for budgets/transactions
+    Db-->>API: Categories list
+    API->>CategoryDb: Map categories to transactions/budgets
+    CategoryDb-->>API: Category info
+    API->>API: Compute spent per budget, spent/income by category
+    API->>PDF: Render charts (pie, line, bar) as PNG
+    PDF-->>API: Chart images
+    API->>PDF: Generate PDF with summary, stats, transactions
+    PDF-->>API: PDF bytes
+    API-->>Reports: Return PDF file

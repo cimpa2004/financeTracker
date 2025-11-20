@@ -1,12 +1,13 @@
-﻿sequenceDiagram
+﻿
+sequenceDiagram
     participant Client
     participant API as /api/spent-by-interval/{interval}
     participant AuthenticationMiddleware
     participant Db as FinancetrackerContext
 
     Client->>API: GET /api/spent-by-interval/{interval}?start=...&end=...
-    API->>Auth: validate token -> get userId
-    Auth-->>API: userId
+    API->>AuthenticationMiddleware: validate token -> get userId
+    AuthenticationMiddleware-->>API: userId
     API->>API: compute period starts based on interval and start/end
     API->>Db: SELECT transactions WHERE userId AND date >= earliest
     Db-->>API: transactions
