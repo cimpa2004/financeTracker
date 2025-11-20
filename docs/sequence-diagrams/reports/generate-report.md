@@ -4,7 +4,7 @@
 sequenceDiagram
     participant Client
     participant API as /api/reports/budgets
-    participant Auth
+    participant AuthenticationMiddleware
     participant Report as ReportService
     participant Db as FinancetrackerContext
 

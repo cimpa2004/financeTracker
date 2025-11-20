@@ -4,7 +4,7 @@
 sequenceDiagram
     participant Client
     participant API as /api/spent-last-month
-    participant Auth
+    participant AuthenticationMiddleware
     participant Db as FinancetrackerContext
 
     Client->>API: GET /api/spent-last-month

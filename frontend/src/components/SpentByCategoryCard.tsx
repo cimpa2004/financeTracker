@@ -78,7 +78,7 @@ export default function SpentByCategoryCard() {
         </Box>
       ) : (
         <Box display={{ xs: 'block', md: 'flex' }} alignItems="center" gap={2}>
-    <Box sx={{ width: { xs: '100%', md: '60%' }, height: 220, minWidth: 0 }}>
+          <Box sx={{ width: { xs: '100%', md: '60%' }, height: 220, minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={90} paddingAngle={0} startAngle={90} endAngle={-270}>
