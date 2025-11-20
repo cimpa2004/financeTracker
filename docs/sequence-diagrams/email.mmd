@@ -1,0 +1,52 @@
+sequenceDiagram
+    participant Caller
+    participant EmailService
+    participant Db as FinancetrackerContext
+    participant Logger
+    participant User
+    participant Notification
+
+    Caller->>EmailService: NotifyBudgetsForTransactionAsync(tx, db, logger)
+    EmailService->>Logger: Log start
+    EmailService->>Db: Load budgets for user (global or matching tx.CategoryId)
+    Db-->>EmailService: Budgets list
+    loop For each budget
+        EmailService->>Db: Load relevant transactions for budget period
+        Db-->>EmailService: Transactions list
+        EmailService->>EmailService: Calculate spent and spentBefore
+        alt Budget amount > 0
+            EmailService->>Db: Remove stale notifications if period changed
+            Db-->>EmailService: Confirmation
+            alt percent >= 90 and percentBefore < 90
+                EmailService->>Db: Check for existing 90% notification
+                Db-->>EmailService: Exists?
+                alt Not exists
+                    EmailService->>Db: Load user
+                    Db-->>EmailService: User info
+                    EmailService->>EmailService: Prepare email (90%)
+                    EmailService->>EmailService: SendTemplatedEmailAsync
+                    EmailService->>Db: Add 90% notification
+                    Db-->>EmailService: Confirmation
+                    EmailService->>Logger: Log sent 90% email
+                else Exists
+                    EmailService->>Logger: Log skip 90% email
+                end
+            end
+            alt percent >= 100 and percentBefore < 100
+                EmailService->>Db: Check for existing 100% notification
+                Db-->>EmailService: Exists?
+                alt Not exists
+                    EmailService->>Db: Load user
+                    Db-->>EmailService: User info
+                    EmailService->>EmailService: Prepare email (100%)
+                    EmailService->>EmailService: SendTemplatedEmailAsync
+                    EmailService->>Db: Add 100% notification
+                    Db-->>EmailService: Confirmation
+                    EmailService->>Logger: Log sent 100% email
+                else Exists
+                    EmailService->>Logger: Log skip 100% email
+                end
+            end
+        end
+    end
+    EmailService->>Logger: Log errors if any

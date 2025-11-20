@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant BudgetPeriodRenewalService
+    participant DI as IServiceProvider
+    participant Db as FinancetrackerContext
+    participant BudgetHelpers
+
+    loop On startup and every 6 hours
+        BudgetPeriodRenewalService->>DI: CreateScope
+        DI-->>BudgetPeriodRenewalService: Scope
+        BudgetPeriodRenewalService->>Db: Get expired budgets
+        Db-->>BudgetPeriodRenewalService: Expired budgets list
+        alt Any expired budgets
+            loop For each expired budget
+                BudgetPeriodRenewalService->>BudgetHelpers: DetectPeriodType
+                BudgetHelpers-->>BudgetPeriodRenewalService: PeriodType
+                alt PeriodType is valid
+                    BudgetPeriodRenewalService->>BudgetHelpers: NextPeriod (advance window)
+                    BudgetHelpers-->>BudgetPeriodRenewalService: New dates
+                    BudgetPeriodRenewalService->>Db: Update budget dates
+                    Db-->>BudgetPeriodRenewalService: Updated
+                end
+            end
+            BudgetPeriodRenewalService->>Db: SaveChangesAsync
+            Db-->>BudgetPeriodRenewalService: Saved
+        end
+    end
