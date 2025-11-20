@@ -11,5 +11,5 @@
     Db-->>API: budgets
     API->>Db: SELECT transactions WHERE userId
     Db-->>API: transactions
-    API->>API: compute per-budget Spent and Remaining in-memory
+    API->>API: compute per-budget Spent and Remaining
     API-->>Client: 200 OK [results]
