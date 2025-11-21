@@ -12,7 +12,6 @@ import {
   Select,
   FormHelperText,
   Box,
-  Typography,
   Stack,
   Alert,
   useMediaQuery,
@@ -130,10 +129,6 @@ export default function TransactionForm({ submitLabel = 'Add Transaction', defau
 
   return (
     <Box sx={{ width: '100%', maxWidth: '600px', mx: 'auto', p: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        {submitLabel}
-      </Typography>
-
       {showError && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {(() => {
