@@ -1,0 +1,121 @@
+classDiagram
+direction LR
+
+%% Backend class diagram (excluding Models and household features)
+%% Detailed version with key fields & methods (per user request to "add function and vars")
+%% If you prefer the minimal version, remove everything inside braces.
+
+
+class LoginApi {
+  +LoginUser()
+}
+class LogoutApi {
+  +LogoutUser()
+}
+class RegisterApi {
+  +RegisterUser()
+}
+class NewTokenApi {
+  +RefreshTokens()
+}
+class BudgetsApi {
+  +AddBudget()
+  +GetBudgets()
+  +GetBudgetById()
+  +UpdateBudget()
+  +DeleteBudget()
+}
+class CategoriesApi {
+  +AddCategory()
+  +GetCategories()
+  +UpdateCategory()
+  +DeleteCategory()
+}
+class TransactionsApi {
+  +AddTransaction()
+  +UpdateTransaction()
+  +DeleteTransaction()
+  +ListTransactions()
+}
+class SubscriptionsApi {
+  +GetSubscriptions()
+  +GetLast3Subscriptions()
+}
+class StatisticsApi {
+  +GetSpentByCategory(interval)
+  +GetSpentByInterval(interval)
+}
+class SpentThisMonthApi {
+  +GetSpentLastMonth()
+}
+class ReportsApi {
+  +GenerateBudgetReport()
+}
+class UserApi {
+  +GetCurrentUser()
+  +UpdateCurrentUser()
+}
+
+class JwtService {
+	-string _key
+	-string _issuer
+	-string _audience
+	-int _accessTokenMinutes
+	-int _refreshTokenMinutes
+	+GenerateTokens(user) : TokenResult
+}
+class ReportService {
+	-FinancetrackerContext _db
+	+GenerateBudgetReportPdfAsync(userId, from, to)
+}
+class BudgetPeriodRenewalService {
+	-IServiceProvider _services
+	-ILogger _logger
+	+ExecuteAsync(stoppingToken)
+	+RenewBudgetsAsync(ct)
+}
+class HttpContextExtensions {
+	+TryGetUserId(http, out userId) bool
+	+GetUserId(http) Guid?
+}
+class IEmailService {
+	<<interface>>
+	+SendTemplatedEmailAsync(to, subjTpl, htmlTpl, model)
+	+NotifyBudgetsForTransactionAsync(tx, db, logger)
+}
+class MailjetEmailService {
+	-IHttpClientFactory _httpFactory
+	-IConfiguration _config
+	-ILogger _logger
+	+SendTemplatedEmailAsync(...)
+	+NotifyBudgetsForTransactionAsync(...)
+}
+MailjetEmailService ..|> IEmailService
+class BudgetHelpers {
+	+NormalizeRangeForResponse(start?, end?) (start?, end?)
+	+DetectPeriodType(start?, end?) : BudgetPeriodType
+	+NextPeriod(currStart, currEnd, type) (nextStart, nextEnd)
+	+ValidateCategoryExistsAsync(categoryId?, db, userId) bool
+	+BuildCategoryObjectAsync(budget, db) object?
+}
+
+
+%% API → Service/Helper dependencies
+LoginApi ..> JwtService
+NewTokenApi ..> JwtService
+ReportsApi ..> ReportService
+BudgetsApi ..> BudgetHelpers
+BudgetPeriodRenewalService ..> BudgetHelpers
+TransactionsApi ..> IEmailService
+
+%% Widely used HTTP helpers for auth context
+BudgetsApi ..> HttpContextExtensions
+CategoriesApi ..> HttpContextExtensions
+TransactionsApi ..> HttpContextExtensions
+SubscriptionsApi ..> HttpContextExtensions
+StatisticsApi ..> HttpContextExtensions
+SpentThisMonthApi ..> HttpContextExtensions
+ReportsApi ..> HttpContextExtensions
+UserApi ..> HttpContextExtensions
+
+%% Models intentionally excluded per request.

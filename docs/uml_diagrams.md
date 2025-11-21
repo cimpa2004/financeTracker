@@ -6,11 +6,12 @@ This file contains Mermaid class diagrams generated from the backend model class
 
 ### Split class diagrams
 
-For easier navigation the class diagrams are split into three files:
+For easier navigation the class diagrams are split into these files:
 
 - `docs/models_class_diagrams.md` — models and relationships (User, Category, Budget, Transaction, Subscription, etc.)
 - `docs/services_class_diagrams.md` — services and helpers (JwtService, ReportService, Email, BudgetHelpers, HttpContextExtensions)
 - `docs/apis_class_diagrams.md` — API/controller class mappings (LoginApi, TransactionsApi, BudgetsApi, etc.)
+- `docs/diagrams/backend_overview.mmd` — backend overview (excludes Models and household features), grouped by Features/APIs/Services/Helpers. Open in a Mermaid-capable viewer.
 
 Open those files to view the Mermaid diagrams separately. The rest of this document keeps notes and sequence diagrams.
 
