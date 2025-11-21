@@ -9,6 +9,7 @@ import {
   MenuItem,
   Stack,
   Alert,
+  Typography,
 } from '@mui/material';
 import { useAddCategory } from '../apis/Category';
 import type { AddCategoryInput } from '../types/Category';
@@ -54,6 +55,9 @@ export default function AddCategoryForm() {
     <Box sx={{ width: '100%', maxWidth: 520, mx: 'auto', p: 2 }}>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Stack spacing={2}>
+          <Typography variant="h5" component="h1" gutterBottom>
+            Add New Category
+          </Typography>
           {isError && <Alert severity="error">{error?.message ?? 'Failed to add category'}</Alert>}
           {isSuccess && <Alert severity="success">Category added</Alert>}
 
