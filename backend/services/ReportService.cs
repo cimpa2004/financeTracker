@@ -104,15 +104,17 @@ public class ReportService
       .OrderBy(g => g.Day)
       .ToList();
 
+    // Prepare data for new line chart
+    var daysExpenses = dayGroups.Select(d => (Day: d.Day, Value: d.Spent)).ToList();
+    var daysIncome = dayGroups.Select(d => (Day: d.Day, Value: d.Income)).ToList();
+
     // Render charts to PNGs
-    // convert anonymous lists to typed lists for rendering
     var pieTypedExpenses = pieDataExpenses.Select(p => (Label: p.Label, Value: p.Value, Color: p.Color.HasValue ? p.Color.Value : (SKColor?)null)).ToList();
     var pieTypedIncome = pieDataIncome.Select(p => (Label: p.Label, Value: p.Value, Color: p.Color.HasValue ? p.Color.Value : (SKColor?)null)).ToList();
-    var daysTyped = dayGroups.Select(d => (Day: d.Day, Value: d.Spent)).ToList();
     var budgetsTyped = budgetItems.Select(b => (Name: b.Name, Amount: b.Amount, Spent: b.Spent)).ToList();
     var piePngExpenses = RenderPieChartPng(pieTypedExpenses, 700, 520);
     var piePngIncome = RenderPieChartPng(pieTypedIncome, 700, 520);
-    var linePng = RenderLineChartPng(daysTyped, 700, 220);
+    var linePng = RenderLineChartPngWithIncome(daysExpenses, daysIncome, 700, 260);
     var budgetPng = RenderBudgetBarChartPng(budgetsTyped, 700, Math.Max(120, budgetItems.Count * 36));
 
     var doc = Document.Create(container =>
@@ -350,77 +352,114 @@ public class ReportService
     return enc2.ToArray();
   }
 
-  private static byte[] RenderLineChartPng(List<(DateTime Day, double Value)> points, int width, int height)
+  // New method: RenderLineChartPngWithIncome
+  private static byte[] RenderLineChartPngWithIncome(List<(DateTime Day, double Value)> expenses, List<(DateTime Day, double Value)> income, int width, int height)
   {
     using var bitmap = new SKBitmap(width, height);
     using var canvas = new SKCanvas(bitmap);
     canvas.Clear(SKColors.White);
 
-    if (points == null || points.Count == 0)
+    // Defensive: treat null lists as empty
+    expenses = expenses ?? new List<(DateTime Day, double Value)>();
+    income = income ?? new List<(DateTime Day, double Value)>();
+
+    if (expenses.Count == 0 && income.Count == 0)
     {
-      using var paint = new SKPaint { Color = SKColors.Black, TextSize = 14 };
-      canvas.DrawText("No data", width / 2f - 20f, height / 2f, paint);
+      using var noDataPaint = new SKPaint { Color = SKColors.Black, TextSize = 14 };
+      canvas.DrawText("No data", width / 2f - 20f, height / 2f, noDataPaint);
       using var img = SKImage.FromBitmap(bitmap);
-      using var enc3 = img.Encode(SKEncodedImageFormat.Png, 90);
-      return enc3.ToArray();
+      using var encodedNoData = img.Encode(SKEncodedImageFormat.Png, 90);
+      return encodedNoData.ToArray();
     }
 
-    var marginLeft = 40f;
-    var marginRight = 10f;
-    var marginTop = 10f;
-    var marginBottom = 30f;
+    var marginLeft = 50f;
+    var marginRight = 20f;
+    var marginTop = 30f;
+    var marginBottom = 40f;
+    var legendHeight = 30f;
 
     var plotWidth = width - marginLeft - marginRight;
-    var plotHeight = height - marginTop - marginBottom;
+    var plotHeight = height - marginTop - marginBottom - legendHeight;
 
-    var max = (float)Math.Max(1, points.Max(p => p.Value));
-    var min = (float)points.Min(p => p.Value);
+    // Merge days for axis
+    var allDays = expenses.Select(e => e.Day).Concat(income.Select(i => i.Day)).Distinct().OrderBy(d => d).ToList();
+    if (allDays.Count == 0)
+    {
+      using var noDaysPaint = new SKPaint { Color = SKColors.Black, TextSize = 14 };
+      canvas.DrawText("No data", width / 2f - 20f, height / 2f, noDaysPaint);
+      using var img = SKImage.FromBitmap(bitmap);
+      using var encodedNoDays = img.Encode(SKEncodedImageFormat.Png, 90);
+      return encodedNoDays.ToArray();
+    }
+
+    // Find min/max for Y axis
+    var allValues = expenses.Select(e => e.Value).Concat(income.Select(i => i.Value)).ToList();
+    var max = (float)Math.Max(1, allValues.Count > 0 ? allValues.Max() : 1);
+    var min = (float)(allValues.Count > 0 ? allValues.Min() : 0);
     var range = Math.Max(0.0001f, max - min);
 
     using var axisPaint = new SKPaint { Color = SKColors.LightGray, StrokeWidth = 1 };
-    using var linePaint = new SKPaint { Color = SKColors.Blue, StrokeWidth = 2, IsStroke = true, IsAntialias = true };
-    using var fillPaint = new SKPaint { Color = SKColor.Parse("#BBDEFB"), IsAntialias = true };
-    using var textPaint = new SKPaint { Color = SKColors.Black, TextSize = 10, IsAntialias = true };
+    using var expenseLinePaint = new SKPaint { Color = SKColors.Red, StrokeWidth = 2, IsStroke = true, IsAntialias = true };
+    using var incomeLinePaint = new SKPaint { Color = SKColors.Green, StrokeWidth = 2, IsStroke = true, IsAntialias = true };
+    using var textPaint = new SKPaint { Color = SKColors.Black, TextSize = 12, IsAntialias = true };
 
     // draw axes
     canvas.DrawLine(marginLeft, marginTop, marginLeft, marginTop + plotHeight, axisPaint);
     canvas.DrawLine(marginLeft, marginTop + plotHeight, marginLeft + plotWidth, marginTop + plotHeight, axisPaint);
 
-    // plot points
-    var stepX = plotWidth / Math.Max(1, points.Count - 1);
-    var pts = new SKPoint[points.Count];
-    for (int i = 0; i < points.Count; i++)
+    // X axis labels (dates)
+    var stepX = plotWidth / Math.Max(1, allDays.Count - 1);
+    for (int i = 0; i < allDays.Count; i++)
     {
       var x = marginLeft + i * stepX;
-      var y = marginTop + plotHeight - (float)((points[i].Value - min) / range * plotHeight);
-      pts[i] = new SKPoint(x, y);
+      var dateStr = allDays[i].ToString("MM-dd");
+      canvas.DrawText(dateStr, x - 18, marginTop + plotHeight + 18, textPaint);
     }
 
-    // fill area
-    var path = new SKPath();
-    path.MoveTo(pts[0]);
-    for (int i = 1; i < pts.Length; i++) path.LineTo(pts[i]);
-    path.LineTo(marginLeft + plotWidth, marginTop + plotHeight);
-    path.LineTo(marginLeft, marginTop + plotHeight);
-    path.Close();
-    canvas.DrawPath(path, fillPaint);
+    // Y axis labels (min/max)
+    canvas.DrawText(max.ToString("0.##"), marginLeft - 40, marginTop + 10, textPaint);
+    canvas.DrawText(min.ToString("0.##"), marginLeft - 40, marginTop + plotHeight, textPaint);
+    canvas.DrawText("Amount", marginLeft - 40, marginTop + plotHeight / 2, textPaint);
 
-    // draw line
-    for (int i = 0; i < pts.Length - 1; i++)
+    // plot expenses line
+    var expensePts = new SKPoint[allDays.Count];
+    for (int i = 0; i < allDays.Count; i++)
     {
-      canvas.DrawLine(pts[i], pts[i + 1], linePaint);
+      var x = marginLeft + i * stepX;
+      var val = expenses.FirstOrDefault(e => e.Day == allDays[i]).Value;
+      var y = marginTop + plotHeight - (float)((val - min) / range * plotHeight);
+      expensePts[i] = new SKPoint(x, y);
     }
+    for (int i = 0; i < expensePts.Length - 1; i++)
+      canvas.DrawLine(expensePts[i], expensePts[i + 1], expenseLinePaint);
+    foreach (var p in expensePts) canvas.DrawCircle(p, 3, expenseLinePaint);
 
-    // draw points
-    foreach (var p in pts) canvas.DrawCircle(p, 3, linePaint);
+    // plot income line
+    var incomePts = new SKPoint[allDays.Count];
+    for (int i = 0; i < allDays.Count; i++)
+    {
+      var x = marginLeft + i * stepX;
+      var val = income.FirstOrDefault(e => e.Day == allDays[i]).Value;
+      var y = marginTop + plotHeight - (float)((val - min) / range * plotHeight);
+      incomePts[i] = new SKPoint(x, y);
+    }
+    for (int i = 0; i < incomePts.Length - 1; i++)
+      canvas.DrawLine(incomePts[i], incomePts[i + 1], incomeLinePaint);
+    foreach (var p in incomePts) canvas.DrawCircle(p, 3, incomeLinePaint);
 
-    // labels (min/max)
-    canvas.DrawText(max.ToString("0.##"), 4, marginTop + 10, textPaint);
-    canvas.DrawText(min.ToString("0.##"), 4, marginTop + plotHeight, textPaint);
+    // Legend
+    var legendY = marginTop + plotHeight + 28;
+    canvas.DrawRect(new SKRect(marginLeft, legendY, marginLeft + 16, legendY + 16), expenseLinePaint);
+    canvas.DrawText("Expenses", marginLeft + 22, legendY + 13, textPaint);
+    canvas.DrawRect(new SKRect(marginLeft + 120, legendY, marginLeft + 136, legendY + 16), incomeLinePaint);
+    canvas.DrawText("Income", marginLeft + 142, legendY + 13, textPaint);
+
+    // X axis label
+    canvas.DrawText("Date", marginLeft + plotWidth / 2 - 20, marginTop + plotHeight + 38, textPaint);
 
     using var image = SKImage.FromBitmap(bitmap);
-    using var enc4 = image.Encode(SKEncodedImageFormat.Png, 90);
-    return enc4.ToArray();
+    using var encodedImage = image.Encode(SKEncodedImageFormat.Png, 90);
+    return encodedImage.ToArray();
   }
 
   private static byte[] RenderBudgetBarChartPng(List<(string Name, double Amount, double Spent)> items, int width, int height)
